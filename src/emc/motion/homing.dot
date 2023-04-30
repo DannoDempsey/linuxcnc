@@ -9,6 +9,7 @@ digraph finite_state_machine {
         START -> IDLE [ label = "errors" ];
         START -> UNLOCK [ label = "unlock needed" ];
         START -> UNLOCK_WAIT [ label = "unlock not needed" ];
+        START -> HOME_ETHERCAT
         UNLOCK -> UNLOCK_WAIT
         UNLOCK_WAIT -> SET_SWITCH_POSITION [ label = "searchvel 0 latchvel 0" ];
         UNLOCK_WAIT -> INDEX_ONLY_START [ label = "searchvel 0 latchvel !0 useindex" ];
@@ -37,6 +38,10 @@ digraph finite_state_machine {
         FINAL_MOVE_WAIT -> LOCK [ label = "in position" ];
         LOCK -> LOCK_WAIT
         LOCK_WAIT -> FINISHED
+
+        HOME_ETHERCAT -> HOME_ETHERCAT_WAIT
+        HOME_ETHERCAT_WAIT -> HOME_ETHERCAT_DONE
+        HOME_ETHERCAT_DONE -> HOME_FINISHED
 
         FINISHED -> IDLE
         IDLE -> START 

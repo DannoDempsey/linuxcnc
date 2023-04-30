@@ -106,7 +106,7 @@ typedef struct {
     hal_bit_t *neg_lim_sw;	/* RPI: negative limit switch input */
     hal_bit_t *home_sw;		/* RPI: home switch input */
     hal_bit_t *index_enable;	/* RPIO: motmod sets: request reset on index
-				         encoder clears: index arrived */
+                         encoder clears: index arrived */
     hal_bit_t *amp_fault;	/* RPI: amp fault input */
     hal_bit_t *amp_enable;	/* WPI: amp enable output */
     hal_s32_t *home_state;	/* WPI: homing state machine state */
@@ -119,6 +119,8 @@ typedef struct {
     hal_float_t *jjog_scale;	/* RPI: distance to jog on each count */
     hal_float_t *jjog_accel_fraction;	/* RPI: to limit wheel jog accel */
     hal_bit_t   *jjog_vel_mode;	/* RPI: true for "velocity mode" jogwheel */
+    hal_bit_t   *ethercat_ext_homing; /* OUT pin to start the servo's internal homing routine */
+    hal_bit_t   *ethercat_ext_homed; /*IN pin to signal the homing routine is complete*/
 
 } joint_hal_t;
 
@@ -365,6 +367,15 @@ int joint_is_lockable(int joint_num);
 #define GET_JOINT_FAULT_FLAG(joint) ((joint)->flag & EMCMOT_JOINT_FAULT_BIT ? 1 : 0)
 
 #define SET_JOINT_FAULT_FLAG(joint,fl) if (fl) (joint)->flag |= EMCMOT_JOINT_FAULT_BIT; else (joint)->flag &= ~EMCMOT_JOINT_FAULT_BIT;
+
+/* Special flags for ethercat homing routine*/
+#define SET_JOINT_ETHERCAT_EXT_HOMING_FLAG(joint,fl) if (fl) (joint)->flag |= ETHERCAT_JOINT_EXT_HOME_BIT; else (joint)->flag &= ~ETHERCAT_JOINT_EXT_HOME_BIT;
+
+#define GET_JOINT_ETHERCAT_EXT_HOMING_FLAG(joint) ((joint)->flag & ETHERCAT_JOINT_EXT_HOME_BIT ? 1 : 0)
+
+#define SET_JOINT_ETHERCAT_EXT_HOMED_FLAG(joint,fl) if (fl) (joint)->flag |= ETHERCAT_JOINT_EXT_HOME_DONE_BIT; else (joint)->flag &= ~ETHERCAT_JOINT_EXT_HOME_DONE_BIT;
+
+#define GET_JOINT_ETHERCAT_EXT_HOMED_FLAG(joint) ((joint)->flag & ETHERCAT_JOINT_EXT_HOME_DONE_BIT ? 1 : 0)
 
 #if defined(__KERNEL__)
 #define HAVE_CPU_KHZ

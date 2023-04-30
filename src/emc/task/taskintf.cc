@@ -281,7 +281,7 @@ int emcJointSetMinFerror(int joint, double ferror)
 int emcJointSetHomingParams(int joint, double home, double offset, double home_final_vel,
 			   double search_vel, double latch_vel,
 			   int use_index, int ignore_limits, int is_shared,
-			   int sequence,int volatile_home, int locking_indexer,int absolute_encoder)
+			   int sequence,int volatile_home, int locking_indexer,int absolute_encoder, int auto_servo)
 {
 #ifdef ISNAN_TRAP
     if (std::isnan(home) || std::isnan(offset) || std::isnan(home_final_vel) ||
@@ -333,12 +333,15 @@ int emcJointSetHomingParams(int joint, double home, double offset, double home_f
         }
     }
 
+    if (auto_servo) {
+        emcmotCommand.flags |= HOME_AUTO_SERVO;
+    }
     int retval = usrmotWriteEmcmotCommand(&emcmotCommand);
 
     if (emc_debug & EMC_DEBUG_CONFIG) {
-        rcs_print("%s(%d, %.4f, %.4f, %.4f, %.4f, %.4f, %d, %d, %d, %d, %d) returned %d\n",
+        rcs_print("%s(%d, %.4f, %.4f, %.4f, %.4f, %.4f, %d, %d, %d, %d, %d, %d) returned %d\n",
           __FUNCTION__, joint, home, offset, home_final_vel, search_vel, latch_vel,
-          use_index, ignore_limits, is_shared, sequence, volatile_home, retval);
+          use_index, ignore_limits, is_shared, sequence, volatile_home, auto_servo, retval);
     }
     return retval;
 }

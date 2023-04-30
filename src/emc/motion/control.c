@@ -491,7 +491,18 @@ static void process_inputs(void)
 	} else {
 	    SET_JOINT_HOME_SWITCH_FLAG(joint, 0);
 	}
-	/* end of read and process joint inputs loop */
+
+    /*read external homing done bit*/
+    if (*(joint_data->ethercat_ext_homed)){
+        SET_JOINT_ETHERCAT_EXT_HOMED_FLAG(joint, 1);
+    } else {
+        SET_JOINT_ETHERCAT_EXT_HOMED_FLAG(joint, 0);
+    }
+
+    joint->ethercat_servo_is_homed =GET_JOINT_ETHERCAT_EXT_HOMED_FLAG(joint);
+
+
+    /* end of read and process joint inputs loop */
     }
 
     // a fault was signalled during a spindle-orient in progress
@@ -792,14 +803,15 @@ static void check_for_faults(void)
 		emcmotDebug->enabling = 0;
 	    }
 	    /* check for excessive following error */
-	    if (GET_JOINT_FERROR_FLAG(joint)) {
+        /* ignore the following error if ethercat_ext_homing is TRUE*/
+	    if (GET_JOINT_FERROR_FLAG(joint) && ! GET_JOINT_ETHERCAT_EXT_HOMING_FLAG(joint)) {
 		if (!GET_JOINT_ERROR_FLAG(joint)) {
 		    /* report the error just this once */
 		    reportError(_("joint %d following error"), joint_num);
 		}
 		SET_JOINT_ERROR_FLAG(joint, 1);
 		emcmotDebug->enabling = 0;
-	    }
+        }
 	/* end of if JOINT_ACTIVE_FLAG(joint) */
 	}
     /* end of check for joint faults loop */
@@ -2068,7 +2080,9 @@ static void output_to_hal(void)
 	*(joint_data->f_errored) = GET_JOINT_FERROR_FLAG(joint);
 	*(joint_data->faulted) = GET_JOINT_FAULT_FLAG(joint);
 	*(joint_data->home_state) = joint->home_state;
-
+    // add our ethercat data
+    *(joint_data->ethercat_ext_homing) = GET_JOINT_ETHERCAT_EXT_HOMING_FLAG(joint);
+    
         // conditionally remove outstanding requests to unlock rotaries:
         if  ( !GET_MOTION_ENABLE_FLAG() && (joint_is_lockable(joint_num))) {
              *(joint_data->unlock) = 0;

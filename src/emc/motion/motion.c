@@ -621,6 +621,9 @@ static int export_joint(int num, joint_hal_t * addr)
         if ((retval = hal_pin_bit_newf(HAL_IN, &(addr->is_unlocked), mot_comp_id, "joint.%d.is-unlocked", num)) != 0) return retval;
     }
 
+    if ((retval = hal_pin_bit_newf(HAL_OUT, &(addr->ethercat_ext_homing), mot_comp_id, "joint.%d.ethercat-ext-homing", num)) != 0) return retval;
+    if ((retval = hal_pin_bit_newf(HAL_IN, &(addr->ethercat_ext_homed), mot_comp_id, "joint.%d.ethercat-ext-homed", num)) != 0) return retval;
+
     /* restore saved message level */
     rtapi_set_msg_level(msg);
     return 0;

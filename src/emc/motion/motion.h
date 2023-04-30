@@ -369,6 +369,13 @@ Suggestion: Split this in to an Error and a Status flag register..
 #define EMCMOT_JOINT_FERROR_BIT         0x1000
 #define EMCMOT_JOINT_FAULT_BIT          0x2000
 
+/*There are two unused bits in the joint status (16 & 32)
+  we may be able to exploit this and add them directly to the 
+  joint status 
+*/ 
+#define ETHERCAT_JOINT_EXT_HOME_BIT 			0x0010
+#define ETHERCAT_JOINT_EXT_HOME_DONE_BIT        0x0020
+
 /*! \todo FIXME - the terms "teleop", "coord", and "free" are poorly
    documented.  This is my feeble attempt to understand exactly
    what they mean.
@@ -455,7 +462,10 @@ Suggestion: Split this in to an Error and a Status flag register..
 	HOME_LOCK,			// 22
 	HOME_LOCK_WAIT,			// 23
 	HOME_FINISHED,			// 24
-	HOME_ABORT			// 25
+	HOME_ABORT,			// 25
+	HOME_ETHERCAT,		// 26
+	HOME_ETHERCAT_WAIT, //27
+	HOME_ETHERCAT_DONE //28
     } home_state_t;
 
     typedef enum {
@@ -482,6 +492,7 @@ Suggestion: Split this in to an Error and a Status flag register..
 #define HOME_ABSOLUTE_ENCODER  16
 #define HOME_NO_REHOME         32
 #define HOME_NO_FINAL_MOVE     64
+#define HOME_AUTO_SERVO		   128
 
 /* flags for enabling spindle scaling, feed scaling,
    adaptive feed, and feed hold */
@@ -561,6 +572,7 @@ Suggestion: Split this in to an Error and a Status flag register..
 				   to set position to zero during homing */
 	int old_jjog_counts;	/* prior value, used for deltas */
 	double big_vel;		/* used for "debouncing" velocity */
+	int ethercat_servo_is_homed; /* non-zero if homed */
     } emcmot_joint_t;
 
 /* This structure contains only the "status" data associated with

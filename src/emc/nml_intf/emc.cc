@@ -2654,6 +2654,7 @@ void EMC_JOINT_SET_HOMING_PARAMS::update(CMS * cms)
     cms->update(ignore_limits);
     cms->update(volatile_home);
     cms->update(locking_indexer);
+    cms->update(auto_servo);
 
 }
 
