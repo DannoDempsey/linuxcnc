@@ -631,7 +631,7 @@ class HandlerClass:
     
     # tool tab
     def btn_m61_clicked(self):
-        checked = self.w.tooloffsetview.get_checked_list()
+          = self.w.tooloffsetview.get_checked_list()
         if len(checked) > 1:
             self.add_status("Select only 1 tool to load")
         elif checked:

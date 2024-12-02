@@ -6,12 +6,14 @@
 #
 ########################################################################
 # user space components
+#loadusr -W /home/daniel/dev/linuxcnc-dev/bin/lcec_conf /home/daniel/dev/linuxcnc-dev/configs/ec-sim/ec-test.xml
 loadusr -W hal_manualtoolchange
 
 # components
-#loadrt homemod 
+#loadrt lcec
 loadrt trivkins coordinates=xz 
 loadrt motmod base_period_nsec=500000 servo_period_nsec=1000000 num_joints=2 num_dio=64 num_aio=16 num_spindles=1
+
 loadrt pid names=J0_pid,J1_pid 
 loadrt mux2 names=J0_mux,J1_mux 
 loadrt ddt names=J0_vel,J0_accel,J1_vel,J1_accel 
@@ -28,7 +30,7 @@ loadrt near names=near_speed
 
 # classic ladder
 loadrt classicladder_rt numBits=10 numCounters=10 numTimersIec=20 numPhysInputs=200 numPhysOutputs=200
-addf classicladder.0.refresh servo-thread
+#addf classicladder.0.refresh servo-thread
 loadusr classicladder ec-sim-ladder.clp
 
 # pin aliases
@@ -93,7 +95,7 @@ setp spindle_mass.tmax              0
 ########################################################################
 # lcec must be added first
 #addf lcec.read-all servo-thread
-
+addf classicladder.0.refresh servo-thread
 addf motion-command-handler servo-thread
 addf motion-controller servo-thread
 addf J0_pid.do-pid-calcs servo-thread

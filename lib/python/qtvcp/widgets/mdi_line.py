@@ -91,7 +91,7 @@ class MDI(QLineEdit):
             self.line_up()
         if event.key() == Qt.Key_Down:
             self.line_down()
-
+            
     def line_up(self):
         LOG.debug('up')
         STATUS.emit('move-text-lineup')

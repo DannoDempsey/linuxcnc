@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gladevcp 0.0 -->
-  <!-- interface-requires `?�x4V 0.0 -->
   <!-- interface-requires gtk+ 3.0 -->
   <!-- interface-naming-policy project-wide -->
   <!-- interface-local-resource-path /home/daniel/dev/linuxcnc-dev2/configs/ec-sim/images -->
@@ -128,6 +127,11 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-save-as</property>
+  </object>
+  <object class="GtkImage" id="image6">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
   <object class="GtkImage" id="image8">
     <property name="visible">True</property>
@@ -2074,6 +2078,24 @@
                           <placeholder/>
                         </child>
                         <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
                           <object class="EMC_MDIHistory" id="hal_mdihistory">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -2101,7 +2123,10 @@
                       <object class="State_Sensitive_Table" id="state_sensitive_table2">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="n_rows">3</property>
+                        <property name="n_rows">4</property>
+                        <child>
+                          <placeholder/>
+                        </child>
                         <child>
                           <object class="GtkTable" id="table2">
                             <property name="height_request">100</property>
@@ -3263,6 +3288,15 @@
                                             <property name="y_options">GTK_EXPAND</property>
                                             <property name="y_padding">6</property>
                                           </packing>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
                                         </child>
                                         <child>
                                           <placeholder/>
@@ -6721,6 +6755,15 @@
                               <placeholder/>
                             </child>
                             <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
                               <object class="GtkVBox" id="vbox27">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
@@ -7273,15 +7316,6 @@
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
                                   </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>

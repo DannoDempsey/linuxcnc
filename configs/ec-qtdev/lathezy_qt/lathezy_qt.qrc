@@ -1,0 +1,28 @@
+<RCC>
+  <qresource prefix="images">
+    <file>lathezy_qt-images/brushed_metal.png</file>
+    <file>lathezy_qt-images/clear.png</file>
+    <file>lathezy_qt-images/dimensions.png</file>
+    <file>lathezy_qt-images/editor.png</file>
+    <file>lathezy_qt-images/enter.png</file>
+    <file>lathezy_qt-images/go-down.png</file>
+    <file>lathezy_qt-images/go-next.png</file>
+    <file>lathezy_qt-images/go-previous.png</file>
+    <file>lathezy_qt-images/go-up.png</file>
+    <file>lathezy_qt-images/minus.gif</file>
+    <file>lathezy_qt-images/plus.gif</file>
+    <file>lathezy_qt-images/reload.png</file>
+    <file>lathezy_qt-images/runfrom.png</file>
+    <file>lathezy_qt-images/save.png</file>
+    <file>lathezy_qt-images/save-as.png</file>
+    <file>lathezy_qt-images/stop.png</file>
+    <file>lathezy_qt-images/tool_blockdelete.gif</file>
+    <file>lathezy_qt-images/tool_optpause.gif</file>
+    <file>lathezy_qt-images/tool_pause.gif</file>
+    <file>lathezy_qt-images/tool_run.gif</file>
+    <file>lathezy_qt-images/tool_step.gif</file>
+    <file>lathezy_qt-images/tool_stop.gif</file>
+    <file>lathezy_qt-images/zoom-in.png</file>
+    <file>lathezy_qt-images/zoom-out.png</file>
+  </qresource>
+</RCC>

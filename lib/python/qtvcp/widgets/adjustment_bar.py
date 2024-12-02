@@ -17,7 +17,7 @@
 import os
 
 from PyQt5.QtWidgets import QWidget, QProgressBar, QToolButton, QHBoxLayout,QLabel, QMenu, QAction, QSizePolicy
-from PyQt5.QtCore import Qt, QEvent, pyqtProperty, QBasicTimer, pyqtSignal
+from PyQt5.QtCore import Qt, QEvent, pyqtProperty, QBasicTimer, pyqtSignal, QSize
 from PyQt5.QtGui import QColor, QPainter, QFont, QIcon
 
 from qtvcp.widgets.widget_baseclass import _HalWidgetBase
@@ -39,6 +39,9 @@ LOG = logger.getLogger(__name__)
 # Set the log level for this module
 #LOG.setLevel(logger.DEBUG) # One of DEBUG, INFO, WARNING, ERROR, CRITICAL
 
+# Helper function to set icons in the up and down buttons
+def set_widget_icon(widget, icon):
+    pass
 
 # So we can customize the label
 # meaning we can use a new line
@@ -85,6 +88,9 @@ class HAdjustmentBar(QWidget):
         # so calling these functions actually calls the self.bar's functions.
         self.minimum = self.bar.minimum
         self.maximum = self.bar.maximum
+        # Add the ability to set the icons for the up/down push buttons
+        self.plus_icon = ""
+        self.minus_icon = ""
 
     def buildWidget(self):
         layout = QHBoxLayout(self)
@@ -97,15 +103,28 @@ class HAdjustmentBar(QWidget):
         setlowButton.triggered.connect(self.setLow)
         SettingMenu.addAction(setlowButton)
 
-        self.tb_down = QToolButton()
+        self.tb_down = QToolButton()     
         self.tb_down.pressed.connect(self.on_click_down)
         self.tb_down.released.connect(self.on_released)
-        self.tb_down.setArrowType(Qt.LeftArrow)
+        # Modify to show +/- signs
+        #self.tb_up.setArrowType(Qt.LeftArrow)
+        if QIcon.hasThemeIcon('list-remove'):
+            self.tb_down.setIcon(QIcon.fromTheme('list-remove'))
+            self.tb_down.setIconSize(QSize(24,24))
+        else:
+            self.tb_down.setText(" - ")
 
         self.tb_up = QToolButton()
         self.tb_up.pressed.connect(self.on_click_up)
         self.tb_up.released.connect(self.on_released)
-        self.tb_up.setArrowType(Qt.RightArrow)
+        # Modify to show +/- signs
+        #self.tb_up.setArrowType(Qt.RightArrow)
+        if QIcon.hasThemeIcon('list-add'):
+            self.tb_up.setIcon(QIcon.fromTheme('list-add'))
+            self.tb_up.setIconSize(QSize(24,24))
+        else:
+            self.tb_up.setText(" - ")
+            
 
         if self.showToggleButton:
             tb_set = QToolButton()
