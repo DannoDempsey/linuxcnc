@@ -1,0 +1,15 @@
+QFrame#frame_dro {
+    background: black;
+}
+
+StateLabel#label_metric_mode,
+StateLabel#label_dia_mode,
+StateLabel#label_css_mode,
+DROLabel#dro_x_abs,
+DROLabel#dro_x_rel,
+DROLabel#dro_x_dtg,
+DROLabel#dro_z_abs,
+DROLabel#dro_z_rel,
+DROLabel#dro_z_dtg {
+    color: #32CD32;
+}
