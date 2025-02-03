@@ -95,6 +95,7 @@ static int loadJoint(int joint, EmcIniFile *jointIniFile)
     double maxVelocity;
     double maxAcceleration;
     double ferror;
+    int auto_servo;
 
     // compose string to match, joint = 0 -> JOINT_0, etc.
     snprintf(jointString, sizeof(jointString), "JOINT_%d", joint);
@@ -194,6 +195,10 @@ static int loadJoint(int joint, EmcIniFile *jointIniFile)
         jointIniFile->Find(&locking_indexer, "LOCKING_INDEXER", jointString);
         absolute_encoder = false;
         jointIniFile->Find(&absolute_encoder, "HOME_ABSOLUTE_ENCODER", jointString);
+        
+        auto_servo = false;         //default
+        jointIniFile->Find(&auto_servo, "HOME_AUTO", jointString);
+        
         // issue NML message to set all params
         if (0 != emcJointSetHomingParams(joint, home, offset
                                         ,final_vel, search_vel, latch_vel
@@ -205,6 +210,7 @@ static int loadJoint(int joint, EmcIniFile *jointIniFile)
                                         ,volatile_home
                                         ,locking_indexer
                                         ,absolute_encoder
+                                        ,auto_servo
                                         )) {
             return -1;
         }

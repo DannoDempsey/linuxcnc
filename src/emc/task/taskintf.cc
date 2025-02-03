@@ -275,7 +275,7 @@ int emcJointSetHomingParams(int joint, double home, double offset, double home_f
 			   double search_vel, double latch_vel,
 			   int use_index, int encoder_does_not_reset,
 			   int ignore_limits, int is_shared,
-			   int sequence,int volatile_home, int locking_indexer,int absolute_encoder)
+			   int sequence,int volatile_home, int locking_indexer,int absolute_encoder, int auto_servo)
 {
 #ifdef ISNAN_TRAP
     if (std::isnan(home) || std::isnan(offset) || std::isnan(home_final_vel) ||
@@ -330,12 +330,17 @@ int emcJointSetHomingParams(int joint, double home, double offset, double home_f
         }
     }
 
+    // Set the flag HOME_AUTO_SERVO 
+    if(auto_servo){  
+        emcmotCommand.flags |= HOME_AUTO_SERVO;
+    }
+
     int retval = usrmotWriteEmcmotCommand(&emcmotCommand);
 
     if (emc_debug & EMC_DEBUG_CONFIG) {
-        rcs_print("%s(%d, %.4f, %.4f, %.4f, %.4f, %.4f, %d, %d, %d, %d, %d) returned %d\n",
+        rcs_print("%s(%d, %.4f, %.4f, %.4f, %.4f, %.4f, %d, %d, %d, %d, %d, %d) returned %d\n",
           __FUNCTION__, joint, home, offset, home_final_vel, search_vel, latch_vel,
-          use_index, ignore_limits, is_shared, sequence, volatile_home, retval);
+          use_index, ignore_limits, is_shared, sequence, volatile_home, auto_servo, retval);
     }
     return retval;
 }
@@ -749,6 +754,18 @@ int emcJointUnhome(int joint)
 	emcmotCommand.joint = joint;
 
 	return usrmotWriteEmcmotCommand(&emcmotCommand);
+}
+
+int emcJointHomeEthercat(int joint)
+{
+    if (joint < -1 || joint >= EMCMOT_MAX_JOINTS){
+        return 0;
+    }
+
+    emcmotCommand.command = EMCMOT_JOINT_HOME_ETHERCAT;
+    emcmotCommand.joint = joint;
+
+    return usrmotWriteEmcmotCommand(&emcmotCommand);
 }
 
 int emcJogCont(int nr, double vel, int jjogmode)

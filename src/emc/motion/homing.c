@@ -100,7 +100,10 @@ typedef enum {
   HOME_LOCK,// 22
   HOME_LOCK_WAIT,// 23
   HOME_FINISHED,// 24
-  HOME_ABORT// 25
+  HOME_ABORT,// 25
+  HOME_ETHERCAT,// 26
+  HOME_ETHERCAT_WAIT,// 27
+  HOME_ETHERCAT_DONE // 28
 } home_state_t;
 
 // local per-joint data (includes hal pin data)
@@ -121,6 +124,14 @@ typedef struct {
   int          home_sequence;        // intfc, updateable
   bool         volatile_home;        // intfc
   bool         home_is_synchronized;
+  
+  // Addition of pins for ethercat homing 
+  bool         ethercat_homing;     // OUT pin
+  bool         ethercat_homed;      // IN pin
+  int          ethercat_mode_fb;    // IN pin connectecd to ec_mode.comp  
+  int          ethercat_mode_out;   // Not needed at this point... 
+  bool         ethercat_mode_home;  // OUT pin to interact with ec_mode.comp file to switch from CSP to HOME mode
+
 } home_local_data;
 
 static  home_local_data H[EMCMOT_MAX_JOINTS];
@@ -133,6 +144,9 @@ typedef struct {
     hal_bit_t *index_enable; // motmod sets: request reset on index
                              //        encoder clears: index arrived
     hal_s32_t *home_state;   // homing state machine state
+    hal_bit_t *ethercat_homing;  //
+    hal_bit_t *ethercat_homed;   //
+    hal_s32_t *ethercat_mode_fb; 
 } one_joint_home_data_t;
 
 typedef struct {
@@ -201,6 +215,19 @@ static bool home_do_moving_checks(int jno)
     return 0;
 } // home_do_moving_checks()
 
+/* When the EtherCAT servo is executing its internal homing routine we need to sync 
+   the amplifiers position with LinuxCNC's commanded position*/
+static bool ethercat_sync_pos(int jno){
+    double sync_pos;
+    //sync_pos = ((joints[jno])->motor_pos_fb);
+    //joint->pos_cmd = sync_pos;
+    //joint->pos_fb = sync_pos;
+    //joint->free_tp.pos_cmd = sync_pos;
+    //joint->free_tp.pos_fb = sync_pos;
+    return 0;
+}
+
+
 #define ABORT_CHECK(joint_num) do { \
     if (home_do_moving_checks(joint_num)) { \
         H[joint_num].home_state = HOME_ABORT; \
@@ -251,6 +278,13 @@ static int base_make_joint_home_pins(int id,int njoints)
                                   "joint.%d.home-state", jno);
         retval += hal_pin_bit_newf(HAL_IO, &(addr->index_enable), id,
                                   "joint.%d.index-enable", jno);
+        // Make our new ethercat pins here
+        retval += hal_pin_bit_newf(HAL_OUT, &(addr->ethercat_homing), id,
+                                  "joint.%d.ethercat-homing", jno);
+        retval += hal_pin_bit_newf(HAL_IN, &(addr->ethercat_homed), id,
+                                    "joint.%d.ethercat-homed", jno);
+        retval += hal_pin_s32_newf(HAL_IN, &(addr->ethercat_mode_fb), id,
+                                  "joint.%d.ethercat_mode_fb", jno);  
     }
     return retval;
 } // base_make_joint_home_pins()
@@ -534,6 +568,7 @@ static void base_read_homing_in_pins(int njoints)
         addr = &(joint_home_data->jhd[jno]);
         H[jno].home_sw      = *(addr->home_sw);      // IN
         H[jno].index_enable = *(addr->index_enable); // IO
+        H[jno].ethercat_homed = *(addr->ethercat_homed); // IN
     }
 }
 
@@ -547,6 +582,7 @@ static void base_write_homing_out_pins(int njoints)
         *(addr->homed)        = H[jno].homed;        // OUT
         *(addr->home_state)   = H[jno].home_state;   // OUT
         *(addr->index_enable) = H[jno].index_enable; // IO
+        *(addr->ethercat_homing) = H[jno].ethercat_homing; // OUT
     }
 }
 
@@ -715,6 +751,8 @@ static bool sync_ready(int joint_num)
     return 1; // ready
 } // sync_ready()
 
+
+
 static int base_1joint_state_machine(int joint_num)
 {
     emcmot_joint_t *joint;
@@ -751,7 +789,13 @@ static int base_1joint_state_machine(int joint_num)
             /* nothing to do */
             break;
 
-        case HOME_START:
+        case HOME_START:  
+            /* Debug
+                if (H[joint_num].home_flags & HOME_AUTO_SERVO){
+                rtapi_print_msg(RTAPI_MSG_ERR, "Debug: CASE HOME_START: HOME_AUTO SERVO FLAG SET");
+            }
+            */
+
             /* This state is responsible for getting the homing process
                started.  It doesn't actually do anything, it simply
                determines what state is next */
@@ -783,6 +827,7 @@ static int base_1joint_state_machine(int joint_num)
                 // is not set in case there is a final move requested
                 break;
             }
+
             if (H[joint_num].home_flags & HOME_UNLOCK_FIRST) {
                 H[joint_num].home_state = HOME_UNLOCK;
             } else {
@@ -804,6 +849,17 @@ static int base_1joint_state_machine(int joint_num)
 
             // either we got here without an unlock needed, or the
             // unlock is now complete.
+            
+            // if using the amplifiers internal homing routine now we can take 
+            // control here
+            if (H[joint_num].home_flags & HOME_AUTO_SERVO){
+                H[joint_num].home_state = HOME_ETHERCAT;
+                immediate_state = 1;
+                break;
+
+            }
+
+
             if (H[joint_num].home_search_vel == 0.0) {
                 if (H[joint_num].home_latch_vel == 0.0) {
                     /* both vels == 0 means home at current position */
@@ -1361,9 +1417,75 @@ static int base_1joint_state_machine(int joint_num)
             immediate_state = 1;
             break;
 
+        /*  Overview of Ethercat Homing:
+            
+            HOME_ETHERCAT:
+            Need to deciede if the amplifier is already in HOME mode or
+            do we switch modes here by signallig the ec_mode.comp to do so... 
+            Once the amplifier is in HOME mode we can set the control word to 
+            signal the amplifier to start the homing routine and switch to the 
+            next state.
+            
+            HOME_ETHERCAT_WAIT:
+            While the amplifier is searching for home we need to loop back the 
+            joint-fb positiom to the commanded position, i.e. the feedback position
+            is the commanded position. We need to do this so that if the E-stop is 
+            pressed during homing, the motor doesn't make a terrifying leap back to 
+            the last commanded position. 
+            
+            HOME_ETHERCAT_DONE:
+            After completetion of the homing routine, the amplifier signals that it is home,
+            however there is a slight delay for the aplifiers internal counter to reset to zero.
+            We need to wait for this delay, sync the final position and then move on. 
+
+            Todo:
+            HOME_ETHERCAT_ABORT:
+            Same as HOME_ABORT but also resets the mode? 
+        */
+            
+        case HOME_ETHERCAT:
+            /* Debuging */
+            // rtapi_print_msg(RTAPI_MSG_DBG, _("CASE: HOME_ETHERCAT"));
+
+            /* Reset the timer*/
+            H[joint_num].pause_timer =0;
+            
+            /* Homing is done in teleop mode*/
+            joint->free_tp.enable =1;
+
+            /* Set the Control Word bit to start homing */
+            H[joint_num].ethercat_homing =1;
+
+            /* Next State */
+            H[joint_num].home_state = HOME_ETHERCAT_WAIT;
+            immediate_state = 1;
+            break;
+
+        case HOME_ETHERCAT_WAIT:
+            /* Debug */
+            rtapi_print_msg(RTAPI_MSG_DBG, _("CASE: HOME_ETHERCAT_WAIT"));
+            
+            if (H[joint_num].ethercat_homed){
+                H[joint_num].ethercat_homing = 0;
+                H[joint_num].home_state = HOME_ETHERCAT_DONE;
+                immediate_state = 1;
+                break;
+            }
+            ethercat_sync_pos(joint_num);
+            break;
+
+        case HOME_ETHERCAT_DONE:
+            /* Debug */
+            rtapi_print_msg(RTAPI_MSG_DBG, _("CASE: HOME ETHERCAT DONE"));
+            
+            H[joint_num].home_state = HOME_FINISHED;
+            immediate_state = 1;
+            break;
+
+
         default:
             /* should never get here */
-            rtapi_print_msg(RTAPI_MSG_ERR, _("unknown state '%d' during homing j=%d"),
+            rtapi_print_msg(RTAPI_MSG_DBG, _("unknown state '%d' during homing j=%d"),
                             H[joint_num].home_state,joint_num);
             H[joint_num].home_state = HOME_ABORT;
             immediate_state = 1;

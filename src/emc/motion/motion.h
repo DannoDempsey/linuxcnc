@@ -161,6 +161,11 @@ extern "C" {
 	EMCMOT_JOINT_DEACTIVATE,        /* make joint inactive */
 	EMCMOT_JOINT_HOME,              /* home a joint or all joints */
 	EMCMOT_JOINT_UNHOME,            /* unhome a joint or all joints*/
+	
+	/*Ethercat command*/
+	EMCMOT_JOINT_HOME_ETHERCAT,		/* use servo amplifiers internal homing routine  */
+
+	
 	EMCMOT_SET_JOINT_POSITION_LIMITS, /* set the joint position +/- limits */
 	EMCMOT_SET_JOINT_BACKLASH,      /* set the joint backlash */
 	EMCMOT_SET_JOINT_MIN_FERROR,    /* minimum following error, input units */
@@ -348,6 +353,11 @@ Suggestion: Split this in to an Error and a Status flag register..
 #define EMCMOT_JOINT_FERROR_BIT         0x0040
 #define EMCMOT_JOINT_FAULT_BIT          0x0080
 
+
+#define ETHERCAT_JOINT_EXT_HOME_BIT       0x0200
+#define ETHERCAT_JOINT_EXT_HOME_BIT_DONE  0x0400
+
+
 /*! \todo FIXME - the terms "teleop", "coord", and "free" are poorly
    documented.  This is my feeble attempt to understand exactly
    what they mean.
@@ -480,6 +490,8 @@ Suggestion: Split this in to an Error and a Status flag register..
 				   to set position to zero during homing */
 	int old_jjog_counts;	/* prior value, used for deltas */
 	double big_vel;		/* used for "debouncing" velocity */
+	int ethercat_servo_is_homing;
+	int ethercat_servo_is_homed; /* non zero if homed*/
     } emcmot_joint_t;
 
 /* This structure contains only the "status" data associated with
@@ -516,6 +528,10 @@ Suggestion: Split this in to an Error and a Status flag register..
 	double min_pos_limit;	/* lower soft limit on joint pos */
 	double min_ferror;	/* zero speed following error limit */
 	double max_ferror;	/* max speed following error limit */
+
+	bool ethercat_servo_is_homing;
+	bool ethercat_servo_is_homed;
+	
     } emcmot_joint_status_t;
 
 

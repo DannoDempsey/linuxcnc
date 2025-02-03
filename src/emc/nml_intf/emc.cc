@@ -1832,6 +1832,7 @@ void EMC_JOINT_SET_HOMING_PARAMS::update(CMS * cms)
     cms->update(volatile_home);
     cms->update(locking_indexer);
     cms->update(absolute_encoder);
+    cms->update(auto_servo);
 }
 
 /*

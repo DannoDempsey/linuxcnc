@@ -418,6 +418,10 @@ int main(int argc, char* argv[]) {
                 log_print("JOINT_UNHOME joint=%d\n", c->joint);
                 break;
 
+            case EMCMOT_JOINT_HOME_ETHERCAT:
+                log_print("JOINT_HOME_ETHERCAT joint=%d\n", c->joint);
+                break;
+
             case EMCMOT_JOG_CONT:
                 log_print("JOG_CONT\n");
                 break;

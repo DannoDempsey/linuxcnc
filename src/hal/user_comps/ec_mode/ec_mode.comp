@@ -1,0 +1,70 @@
+component ec_mode "Mode control for Ethercat amplifiers";
+description """ Use component to switch from the default mode 
+CSP => HOME or from HOME => CSP. If the servo has a brake, at least 
+500 ms is required for the brake to engage/disengage.
+
+Also, after the completion of the servos internal homing routine 
+a delay is required between the homed signal from the amplifier and
+the counters reset to zero. 
+""";
+ 
+pin out bit  amp_enable = 1 "Enable/Disable amplifier";  
+pin out s32  opmode = 0 "0x6060, Set amplifier mode";   
+pin io  s32  opmode_fb = 0  "0x6061, Mode Feedback"; // Todo: Change to IN pin
+pin io  s32  opmode_request = 0  "User requested mode"; // Todo: see if ethercat homing routine can interact with this bit 
+pin in  bit  opmode_home = 0  "User requested mode";
+
+param r s32 mode_csp = 8    "0x6060 Default CSP mode"; 
+param r s32 mode_home = 6   "Set 0x6060 to 0x06 HOME mode";
+param rw bit brake_enabled = 1 "Default to 1";
+param rw float brake_delay = 0.5   "Time in seconds for brake release ";
+
+variable double delay_time = 0;
+variable int timer_on = 0; 
+variable int last_mode = 0; 
+
+function _ fp;
+license "GPL";
+author " D. Dempsey";
+;;
+
+#include "rtapi.h"
+#include "stdio.h"
+
+
+
+FUNCTION(_){
+
+    if (opmode_home){
+        if (opmode_fb != mode_home){
+            amp_enable = 0; // Disable amplifier
+            if (!timer_on){
+                delay_time = brake_delay;
+                printf("Brake Delay %0.3f \n", delay_time);
+                timer_on = 1; // Start the timer
+            } else {
+                if (delay_time > 0){
+                    delay_time -= fperiod; // Decrement the delay time by thread period
+                    printf("Brake Delay %0.3f \n", delay_time);
+                } else {
+                    timer_on = 0;
+                    opmode = mode_home;
+                    opmode_fb = mode_home;
+                    amp_enable = 1;
+                    printf("Mode set to HOME /n");
+                }
+            }
+        }    
+        else {
+            timer_on = 0;
+            opmode = mode_home;
+            opmode_fb = mode_home;
+            amp_enable = 1;
+        }
+    }
+    else {
+        opmode = mode_csp;
+        opmode_fb = opmode;
+        amp_enable = 1;
+    }
+}

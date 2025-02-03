@@ -1384,6 +1384,10 @@ void emcmotCommandHandler_locked(void *arg, long servo_period)
             //Negative joint_num specifies unhome_method (-1,-2)
             set_unhomed(joint_num,emcmotStatus->motion_state);
             break;
+	
+	case EMCMOT_JOINT_HOME_ETHERCAT:
+		rtapi_print_msg(RTAPI_MSG_DBG, "ETHERCAT ");
+		break;
 
 	case EMCMOT_CLEAR_PROBE_FLAGS:
 	    rtapi_print_msg(RTAPI_MSG_DBG, "CLEAR_PROBE_FLAGS");
