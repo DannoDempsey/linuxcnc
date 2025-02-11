@@ -82,10 +82,21 @@ class  GCodeGraphics(Lcnc_3dGraphics, _HalWidgetBase):
 
         self._mouseMode = 0
 
+        # Variable to monitor G7/G8
+        self.lathe_display = 0
+        self.dia_mode = 0
+
         if INFO.MACHINE_IS_METRIC:
             self.mach_units = 'Metric'
         else:
             self.mach_units = 'Imperial'
+
+        if INFO.MACHINE_IS_LATHE:
+            self.lathe_display = 1
+        else:
+            self.lathe_display = 0
+
+
 
     def addTimer(self):
         self.timer = QTimer()
@@ -409,6 +420,14 @@ class  GCodeGraphics(Lcnc_3dGraphics, _HalWidgetBase):
     def resetoverlay(self):
         self.show_overlay(False)
     _overlay = pyqtProperty(bool, getoverlay, setoverlay, resetoverlay)
+
+    # show velocity
+    def setShowVelocity(self, state):
+        self.show_velocity = state
+        self.update()
+    def getShowVelocity(self):
+        return self.show_velocity
+    _velocity = pyqtProperty(bool, getShowVelocity, setShowVelocity)
 
     # show Offsets
     def setShowOffsets(self, state):

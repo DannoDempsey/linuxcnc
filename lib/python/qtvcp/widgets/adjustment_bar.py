@@ -15,7 +15,7 @@
 ###############################################################################
 
 from PyQt5.QtWidgets import QWidget, QProgressBar, QToolButton, QHBoxLayout, QMenu, QAction
-from PyQt5.QtCore import Qt, pyqtProperty, QBasicTimer, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtProperty, QBasicTimer, pyqtSignal, QSize
 from PyQt5.QtGui import QPainter, QFont, QIcon
 
 from qtvcp.widgets.widget_baseclass import _HalWidgetBase
@@ -83,6 +83,10 @@ class HAdjustmentBar(QWidget):
         # so calling these functions actually calls the self.bar's functions.
         self.minimum = self.bar.minimum
         self.maximum = self.bar.maximum
+        
+        #Use plus/minus icons for the up and down adjustment icons
+        self.plus_icon = ""
+        self.minus_icon = ""
 
     def buildWidget(self):
         layout = QHBoxLayout(self)
@@ -98,12 +102,24 @@ class HAdjustmentBar(QWidget):
         self.tb_down = QToolButton()
         self.tb_down.pressed.connect(self.on_click_down)
         self.tb_down.released.connect(self.on_released)
-        self.tb_down.setArrowType(Qt.LeftArrow)
+
+        # Modify to show +/- signs
+        if QIcon.hasThemeIcon('list-remove'):
+            self.tb_down.setIcon(QIcon.fromTheme('list-remove'))
+            self.tb_down.setIconSize(QSize(24,24))
+        else:
+            self.tb_down.setText("Qt.LeftArrow")
 
         self.tb_up = QToolButton()
         self.tb_up.pressed.connect(self.on_click_up)
         self.tb_up.released.connect(self.on_released)
-        self.tb_up.setArrowType(Qt.RightArrow)
+        
+        # Modify to show +/- signs
+        if QIcon.hasThemeIcon('list-add'):
+            self.tb_up.setIcon(QIcon.fromTheme('list-add'))
+            self.tb_up.setIconSize(QSize(24,24))
+        else:
+            self.tb_up.setText("Qt.RightArrow")
 
         if self.showToggleButton:
             tb_set = QToolButton()

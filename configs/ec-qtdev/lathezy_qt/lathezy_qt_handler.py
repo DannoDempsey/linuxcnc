@@ -16,6 +16,8 @@ from qtvcp.widgets.stylesheeteditor import  StyleSheetEditor as SSE
 from qtvcp.lib.gcodes import GCodes
 from qtvcp.lib.toolbar_actions import ToolBarActions
 from qtvcp.core import Status, Action, Info, Tool, Path, Qhal
+from qt5_graphics import Lcnc_3dGraphics as Dro
+import qt5_graphics 
 
 # Set up config parser so we can look in the .ini file 
 #from ConfigParser import ConfigParser
@@ -43,6 +45,8 @@ TOOLBAR = ToolBarActions()
 STYLEEDITOR = SSE()
 #GSTAT = GStat()
 #GCODES = GCodes()
+DRO = Dro()
+
 
 # Types for add status message
 DEFAULT = 0
@@ -125,14 +129,26 @@ class HandlerClass:
         # Connect status to return value/messages from various dialogs
         STATUS.connect('general', self.return_value)
         
-        
-    # The g-code editor is not great for touch screens. So we want to 
-    # patch in our own methods and buttons.
-    # TODO:Examine this.
     def class_patch__(self): 
+        self.gcode_editor_patch()
+        #self.qt5_graphics_patch()
+
+    def gcode_editor_patch(self):    
         GCODE.editMode = self.gcode_editMode
         GCODE.readOnlyMode = self.gcode_readOnlyMode
 
+    def qt5_graphics_patch(self):
+        self.old_dro_format = DRO.dro_format
+        DRO.dro_format = self.new_dro_format
+
+    # Class patching a new DRO format is buggy and requires a bunch of duplicate code
+    # easier to modify qt5_graphics and tailor it to a lathe display
+    # TODO:  
+    #def new_dro_format(self,s,spd,dtg,limit,homed,positions,axisdtg,g5x_offset,g92_offset,tlo_offset):
+        # Call a function
+        #print("DEBUG: is_lathe result:", DRO.is_lathe())
+
+        
     # At this point:
     # - the widgets are instantiated.
     # - the HAL pins are built but HAL is not set ready
@@ -142,9 +158,9 @@ class HandlerClass:
         self.init_widgets()
         self.init_jog_inc()
         self.init_turret_tools()
-        # Uncomment to print out a list of available qtvcp objects for 
-        # Linuxnc 2.8.4 
+        # Uncomment to print out a list of available qtvcp objects
         # self.init_library()
+        
     #############################
     # SPECIAL FUNCTIONS SECTION #
     #############################
@@ -858,37 +874,24 @@ class HandlerClass:
     # Preview Buttons
     ###########################################################################
 
-    #TODO: Determine if it is better to use state or checked        
-    """
-    def on_btn_show_dro_toggled(self, checked):   
-        if checked:
-            self.w.gcodegraphics.setProperty('_dro', True)
-            self.w.gcodegraphics.setProperty('overlay', True)
-            print ('_dro = %s' % self.w.gcodegraphics.property('_dro'))
-            self.w.gcodegraphics.redraw()
-        else:
-            self.w.gcodegraphics.setProperty('_dro', False)
-            print ('_dro = %s' % self.w.gcodegraphics.property('_dro')) 
-       """
-
     def on_btn_clear_plot_clicked(self):
         ACTION.SET_GRAPHICS_VIEW('Y2')
         ACTION.SET_GRAPHICS_VIEW('clear')
 
-    def on_btn_show_dro_toggled(self, checked):
-        
-        if checked:
-            print("DRO checked")
-            ACTION.SET_GRAPHICS_VIEW('overlay-dro-on')
-        
-        else:
-            print("DRO unchecked")
-            ACTION.SET_GRAPHICS_VIEW('overlay-dro-off')
+    def on_btn_show_vel_toggled(self, state):
+        print("show velocity")
+        self.w.gcodegraphics.setProperty('_velocity', state)
+
+    def on_btn_show_dtg_toggled(self, state):
+        self.w.gcodegraphics.setProperty('_dtg', state)
+
+    def on_btn_show_offsets_toggled(self, state):
+        self.w.gcodegraphics.setProperty('_offsets', state)
 
     ###########################################################################
     # Spindle
     ###########################################################################
-
+    # Use a line entry dialog to set G97 Sxxxx
     def on_btn_set_rpm_clicked(self):
         mess = {'NAME':'ENTRY',
                 'ID':'_SETRPM',

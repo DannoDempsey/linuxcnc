@@ -344,6 +344,12 @@
                          <property name="false_state_string" stdset="0">
                           <string>JOG DISABLED</string>
                          </property>
+                         <property name="is_on_status" stdset="0">
+                          <bool>false</bool>
+                         </property>
+                         <property name="is_manual_status" stdset="0">
+                          <bool>true</bool>
+                         </property>
                          <property name="isOnSensitive" stdset="0">
                           <bool>true</bool>
                          </property>
@@ -439,6 +445,12 @@
                          <property name="top_edge_offset" stdset="0">
                           <number>5</number>
                          </property>
+                         <property name="is_on_status" stdset="0">
+                          <bool>true</bool>
+                         </property>
+                         <property name="is_manual_status" stdset="0">
+                          <bool>false</bool>
+                         </property>
                         </widget>
                        </item>
                        <item>
@@ -497,6 +509,12 @@
                          </property>
                          <property name="top_edge_offset" stdset="0">
                           <number>5</number>
+                         </property>
+                         <property name="is_on_status" stdset="0">
+                          <bool>false</bool>
+                         </property>
+                         <property name="is_manual_status" stdset="0">
+                          <bool>true</bool>
                          </property>
                          <property name="joint_number_status" stdset="0">
                           <number>1</number>
@@ -707,6 +725,15 @@
                          </property>
                          <property name="text">
                           <string>SET RPM</string>
+                         </property>
+                         <property name="is_manual_status" stdset="0">
+                          <bool>false</bool>
+                         </property>
+                         <property name="isOnSensitive" stdset="0">
+                          <bool>true</bool>
+                         </property>
+                         <property name="isManSensitive" stdset="0">
+                          <bool>true</bool>
                          </property>
                         </widget>
                        </item>
@@ -1374,7 +1401,7 @@ FROM LINE</string>
                 <enum>QTabWidget::South</enum>
                </property>
                <property name="currentIndex">
-                <number>4</number>
+                <number>0</number>
                </property>
                <widget class="QWidget" name="tab_plot">
                 <attribute name="title">
@@ -1420,7 +1447,7 @@ FROM LINE</string>
                      </widget>
                     </item>
                     <item>
-                     <widget class="PushButton" name="btn_show_dro">
+                     <widget class="PushButton" name="btn_show_vel">
                       <property name="minimumSize">
                        <size>
                         <width>0</width>
@@ -1429,26 +1456,49 @@ FROM LINE</string>
                       </property>
                       <property name="font">
                        <font>
-                        <pointsize>12</pointsize>
+                        <pointsize>10</pointsize>
                        </font>
                       </property>
                       <property name="text">
-                       <string>SHOW DRO</string>
+                       <string>SHOW
+VELOCITY</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
                       </property>
                       <property name="checked">
-                       <bool>true</bool>
+                       <bool>false</bool>
                       </property>
                       <property name="checked_state_text_option" stdset="0">
-                       <bool>true</bool>
+                       <bool>false</bool>
+                      </property>
+                      <property name="height_fraction" stdset="0">
+                       <double>4.300000000000000</double>
                       </property>
                       <property name="true_state_string" stdset="0">
-                       <string>SHOW DRO</string>
+                       <string>True</string>
                       </property>
-                      <property name="false_state_string" stdset="0">
-                       <string>HIDE DRO</string>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="PushButton" name="btn_show_dtg">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>40</height>
+                       </size>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <pointsize>10</pointsize>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>SHOW
+DTG</string>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
                       </property>
                      </widget>
                     </item>
@@ -1462,11 +1512,12 @@ FROM LINE</string>
                       </property>
                       <property name="font">
                        <font>
-                        <pointsize>12</pointsize>
+                        <pointsize>10</pointsize>
                        </font>
                       </property>
                       <property name="text">
-                       <string>OFFSETS</string>
+                       <string>SHOW
+OFFSETS</string>
                       </property>
                       <property name="checkable">
                        <bool>true</bool>
@@ -2310,7 +2361,7 @@ FROM LINE</string>
                     </font>
                    </property>
                    <property name="currentIndex">
-                    <number>1</number>
+                    <number>0</number>
                    </property>
                    <widget class="QWidget" name="tab">
                     <attribute name="title">
@@ -2793,7 +2844,19 @@ FROM LINE</string>
                              <property name="top_edge_offset" stdset="0">
                               <number>6</number>
                              </property>
+                             <property name="is_on_status" stdset="0">
+                              <bool>false</bool>
+                             </property>
                              <property name="is_joint_homed_status" stdset="0">
+                              <bool>true</bool>
+                             </property>
+                             <property name="is_manual_status" stdset="0">
+                              <bool>false</bool>
+                             </property>
+                             <property name="isOnSensitive" stdset="0">
+                              <bool>true</bool>
+                             </property>
+                             <property name="isManSensitive" stdset="0">
                               <bool>true</bool>
                              </property>
                             </widget>
@@ -2824,6 +2887,9 @@ FROM LINE</string>
                              </property>
                              <property name="text">
                               <string>UNHOME X</string>
+                             </property>
+                             <property name="pin_name" stdset="0">
+                              <string>unhome_x</string>
                              </property>
                              <property name="unhome_select_action" stdset="0">
                               <bool>true</bool>
@@ -2894,8 +2960,17 @@ FROM LINE</string>
                              <property name="is_joint_homed_status" stdset="0">
                               <bool>true</bool>
                              </property>
+                             <property name="is_manual_status" stdset="0">
+                              <bool>false</bool>
+                             </property>
                              <property name="joint_number_status" stdset="0">
                               <number>1</number>
+                             </property>
+                             <property name="isOnSensitive" stdset="0">
+                              <bool>true</bool>
+                             </property>
+                             <property name="isManSensitive" stdset="0">
+                              <bool>true</bool>
                              </property>
                             </widget>
                            </item>
@@ -2925,6 +3000,9 @@ FROM LINE</string>
                              </property>
                              <property name="text">
                               <string>UNHOME Z</string>
+                             </property>
+                             <property name="pin_name" stdset="0">
+                              <string>unhome_z</string>
                              </property>
                              <property name="joint_number_status" stdset="0">
                               <number>1</number>
@@ -5550,6 +5628,9 @@ FROM LINE</string>
                <property name="isStateOn" stdset="0">
                 <bool>true</bool>
                </property>
+               <property name="isOnSensitive" stdset="0">
+                <bool>true</bool>
+               </property>
                <property name="isAutoSensitive" stdset="0">
                 <bool>false</bool>
                </property>
@@ -5589,6 +5670,9 @@ OVERRIDE</string>
                </property>
                <property name="top_edge_offset" stdset="0">
                 <number>5</number>
+               </property>
+               <property name="isOnSensitive" stdset="0">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -6556,6 +6640,9 @@ OVERRIDE</string>
                   <property name="top_edge_offset" stdset="0">
                    <number>5</number>
                   </property>
+                  <property name="isOnSensitive" stdset="0">
+                   <bool>true</bool>
+                  </property>
                   <property name="isManSensitive" stdset="0">
                    <bool>true</bool>
                   </property>
@@ -6605,6 +6692,9 @@ OVERRIDE</string>
                   </property>
                   <property name="top_edge_offset" stdset="0">
                    <number>5</number>
+                  </property>
+                  <property name="isOnSensitive" stdset="0">
+                   <bool>true</bool>
                   </property>
                   <property name="isManSensitive" stdset="0">
                    <bool>true</bool>
@@ -6665,6 +6755,9 @@ OVERRIDE</string>
                   <property name="top_edge_offset" stdset="0">
                    <number>5</number>
                   </property>
+                  <property name="isOnSensitive" stdset="0">
+                   <bool>true</bool>
+                  </property>
                   <property name="isManSensitive" stdset="0">
                    <bool>true</bool>
                   </property>
@@ -6714,6 +6807,9 @@ OVERRIDE</string>
                   </property>
                   <property name="top_edge_offset" stdset="0">
                    <number>5</number>
+                  </property>
+                  <property name="isOnSensitive" stdset="0">
+                   <bool>true</bool>
                   </property>
                   <property name="isManSensitive" stdset="0">
                    <bool>true</bool>
@@ -7132,10 +7228,10 @@ OVERRIDE</string>
    </hints>
   </connection>
   <connection>
-   <sender>btn_show_dro</sender>
+   <sender>btn_show_vel</sender>
    <signal>toggled(bool)</signal>
    <receiver>MainWindow</receiver>
-   <slot>on_btn_show_dro_toggled()</slot>
+   <slot>on_btn_show_vel_toggled()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>689</x>
@@ -7371,6 +7467,38 @@ OVERRIDE</string>
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>btn_show_dtg</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_btn_show_dtg_toggled()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>962</x>
+     <y>173</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1069</x>
+     <y>582</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_show_offsets</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_btn_show_offsets_toggled()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1079</x>
+     <y>173</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1069</x>
+     <y>582</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_btn_edit_gcode_clicked()</slot>
@@ -7387,7 +7515,7 @@ OVERRIDE</string>
   <slot>on_btn_pan_up_clicked()</slot>
   <slot>on_btn_pan_left_clicked()</slot>
   <slot>on_btn_pan_right_clicked()</slot>
-  <slot>on_btn_show_dro_toggled()</slot>
+  <slot>on_btn_show_vel_toggled()</slot>
   <slot>on_btn_index_tool_clicked()</slot>
   <slot>on_btn_touch_x_clicked()</slot>
   <slot>on_btn_jog_x_minus_pressed()</slot>
@@ -7410,5 +7538,7 @@ OVERRIDE</string>
   <slot>on_btn_home_x_clicked()</slot>
   <slot>on_btn_home_z_clicked()</slot>
   <slot>on_btn_jog_enable_toggled()</slot>
+  <slot>on_btn_show_dtg_toggled()</slot>
+  <slot>on_btn_show_offsets_toggled()</slot>
  </slots>
 </ui>
