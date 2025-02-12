@@ -1731,6 +1731,12 @@ OFFSETS</string>
                       <property name="_overlay" stdset="0">
                        <bool>true</bool>
                       </property>
+                      <property name="_velocity" stdset="0">
+                       <bool>false</bool>
+                      </property>
+                      <property name="_offsets" stdset="0">
+                       <bool>false</bool>
+                      </property>
                       <property name="_small_origin" stdset="0">
                        <bool>true</bool>
                       </property>
