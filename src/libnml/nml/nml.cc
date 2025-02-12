@@ -2088,6 +2088,7 @@ NMLTYPE NML::str2msg(const char *string)
     case CMS_MISC_ERROR:
     case CMS_NO_MASTER_ERROR:
 	error_type = NML_INTERNAL_CMS_ERROR;
+	/* Fallthrough */
     default:
 	return -1;
     }
@@ -2398,7 +2399,7 @@ NMLTYPE NML::peek_subdivision(int subdiv)
 }
 
 // This constructor declared private to prevent copying.
-NML::NML(NML & nml)
+NML::NML(NML & /*nml*/)
 {
 }
 

@@ -76,7 +76,7 @@ sys.excepthook = excepthook
 
 # constants
 #         # gmoccapy  #"
-_RELEASE = " 3.4.8"
+_RELEASE = " 3.4.9"
 _INCH = 0                         # imperial units are active
 _MM = 1                           # metric units are active
 
@@ -1963,7 +1963,7 @@ class gmoccapy(object):
                 except:
                     pass
         temp = 0
-        theme_name = self.prefs.getpref("Gtk_theme", "Follow System Theme", str)
+        theme_name = self.prefs.getpref("gtk_theme", "Follow System Theme", str)
         for index, theme in enumerate(themes):
             model.append((theme,))
             if theme == theme_name:
@@ -2206,12 +2206,11 @@ class gmoccapy(object):
         self.widgets.offsetpage1.set_font("sans 12")
         self.widgets.offsetpage1.set_foreground_color(self._get_RGBA_color("#28D0D9"))
         self.widgets.offsetpage1.selection_mask = ("Tool", "G5x", "Rot")
-        systemlist = ["Tool", "G5x", "Rot", "G92", "G54", "G55", "G56", "G57", "G58", "G59", "G59.1",
-                      "G59.2", "G59.3"]
         names = []
-        for system in systemlist:
-            system_name = "system_name_{0}".format(system)
-            name = self.prefs.getpref(system_name, system, str)
+        default_names = self.widgets.offsetpage1.get_names()
+        for system, name in default_names:
+            system_name = "system_name_{0}".format(system).lower()
+            name = self.prefs.getpref(system_name, name, str)
             names.append([system, name])
         self.widgets.offsetpage1.set_names(names)
 
@@ -2331,7 +2330,7 @@ class gmoccapy(object):
         else:
             names = self.widgets.offsetpage1.get_names()
             for system, name in names:
-                system_name = "system_name_{0}".format(system)
+                system_name = "system_name_{0}".format(system).lower()
                 self.prefs.putpref(system_name, name)
             page.hide()
 
@@ -3545,12 +3544,6 @@ class gmoccapy(object):
             self.on_hal_status_interp_idle(None)
             return
 
-        if "G43" in self.active_gcodes and self.stat.task_mode != linuxcnc.MODE_AUTO:
-            self.command.mode(linuxcnc.MODE_MDI)
-            self.command.wait_complete()
-            self.command.mdi("G43")
-            self.command.wait_complete()
-
     def _set_enable_tooltips(self, value):
         LOG.debug("_set_enable_tooltips = {0}".format(value))
         # this will hide the tooltips from the glade file widgets,
@@ -3995,7 +3988,10 @@ class gmoccapy(object):
             widget.set_image(self.widgets.img_spindle_forward_on)
             self._set_spindle("forward")
         else:
-            self.widgets.rbt_forward.set_image(self.widgets.img_spindle_forward)
+            widget.set_image(self.widgets.img_spindle_forward)
+        # Toggling the sensitive property is important here! See the commit description.
+        widget.set_sensitive(not widget.get_sensitive())
+        widget.set_sensitive(not widget.get_sensitive())
 
     def on_rbt_reverse_clicked(self, widget, data=None):
         if widget.get_active():
@@ -4003,13 +3999,19 @@ class gmoccapy(object):
             self._set_spindle("reverse")
         else:
             widget.set_image(self.widgets.img_spindle_reverse)
+        # Toggling the sensitive property is important here! See the commit description.
+        widget.set_sensitive(not widget.get_sensitive())
+        widget.set_sensitive(not widget.get_sensitive())
 
     def on_rbt_stop_clicked(self, widget, data=None):
         if widget.get_active():
             widget.set_image(self.widgets.img_spindle_stop_on)
             self._set_spindle("stop")
         else:
-            self.widgets.rbt_stop.set_image(self.widgets.img_spindle_stop)
+            widget.set_image(self.widgets.img_spindle_stop)
+        # Toggling the sensitive property is important here! See the commit description.
+        widget.set_sensitive(not widget.get_sensitive())
+        widget.set_sensitive(not widget.get_sensitive())
 
     def _set_spindle(self, command):
         # if we are in estop state, we will have to leave here, otherwise
@@ -4022,18 +4024,6 @@ class gmoccapy(object):
         # be set to the commanded value due to the next code part
         if self.stat.task_mode != linuxcnc.MODE_MANUAL:
             if self.stat.interp_state == linuxcnc.INTERP_READING or self.stat.interp_state == linuxcnc.INTERP_WAITING:
-                if self.stat.spindle[0]['direction'] > 0:
-                    self.widgets.rbt_forward.set_sensitive(False)
-                    self.widgets.rbt_reverse.set_sensitive(True)
-                    self.widgets.rbt_stop.set_sensitive(True)
-                elif self.stat.spindle[0]['direction'] < 0:
-                    self.widgets.rbt_forward.set_sensitive(True)
-                    self.widgets.rbt_reverse.set_sensitive(False)
-                    self.widgets.rbt_stop.set_sensitive(True)
-                else:
-                    self.widgets.rbt_forward.set_sensitive(True)
-                    self.widgets.rbt_reverse.set_sensitive(True)
-                    self.widgets.rbt_stop.set_sensitive(False)
                 return
 
         rpm = self._check_spindle_range()
@@ -4419,7 +4409,7 @@ class gmoccapy(object):
         if active is None:
             return
         theme = widget.get_model()[active][0]
-        self.prefs.putpref('Gtk_theme', theme)
+        self.prefs.putpref("gtk_theme", theme)
         if theme == "Follow System Theme":
             theme = self.default_theme
         settings = Gtk.Settings.get_default()
@@ -5030,7 +5020,10 @@ class gmoccapy(object):
             self.command.wait_complete()
             command = "T{0} M6".format(int(value))
             self.command.mdi(command)
-
+            # Next two lines fix issue #3129 caused by GStat missing changes in interpreter mode
+            command = "G4 P{0}".format(self.get_ini_info.get_cycle_time()/1000)
+            self.command.mdi(command)
+            
     # set tool with M61 Q? or with T? M6
     def on_btn_selected_tool_clicked(self, widget, data=None):
         tool = self.widgets.tooledit1.get_selected_tool()
@@ -5052,6 +5045,9 @@ class gmoccapy(object):
                 command = "T{0} M6".format(tool)
             else:
                 command = "M61 Q{0}".format(tool)
+            self.command.mdi(command)
+            # Next two lines fix issue #3120 also caused by GStat missing changes in interpreter mode
+            command = "G4 P{0}".format(self.get_ini_info.get_cycle_time()/1000)
             self.command.mdi(command)
         else:
             message = _("Could not understand the entered tool number. Will not change anything!")
@@ -5197,11 +5193,11 @@ class gmoccapy(object):
 
     # edit a program or make a new one
     def on_btn_edit_clicked(self, widget, data=None):
-        self.hbox2_position = self.widgets.hbox2.get_position()
         self.widgets.ntb_button.set_current_page(_BB_EDIT)
         self.widgets.ntb_preview.hide()
         self.widgets.grid_DRO.hide()
         self.widgets.vbox14.hide()
+        self.widgets.vbox_jog.set_hexpand(True)
         self.widgets.box_dro_side.hide()
         if not self.widgets.vbx_jog.get_visible():
             self.widgets.vbx_jog.set_visible(True)
@@ -5280,8 +5276,8 @@ class gmoccapy(object):
             self.widgets.ntb_preview.show()
             self.widgets.grid_DRO.show()
             self.widgets.vbox14.show()
+            self.widgets.vbox_jog.set_hexpand(False)
             self.widgets.box_dro_side.show()
-            self.widgets.hbox2.set_position(self.hbox2_position)
             self.widgets.gcode_view.set_sensitive(False)
             self.widgets.btn_save.set_sensitive(True)
             self.widgets.hal_action_reload.emit("activate")

@@ -109,7 +109,7 @@ static void set_namef(const char *fmt, ...) {
 }
 
 pthread_t queue_thread;
-void *queue_function(void *arg) {
+void *queue_function(void * /*arg*/) {
     set_namef("rtapi_app:mesg");
     // note: can't use anything in this function that requires App() to exist
     // but it's OK to use functions that aren't safe for realtime (that's the
@@ -346,14 +346,21 @@ static int read_number(int fd) {
 
 static string read_string(int fd) {
     int len = read_number(fd);
-    char buf[len];
-    if(read(fd, buf, len) != len) throw ReadError();
-    return string(buf, len);
+    if(len < 0)
+        throw ReadError();
+    if(!len)
+        return string();
+    string str(len, 0);
+    if(read(fd, str.data(), len) != len)
+        throw ReadError();
+    return str;
 }
 
 static vector<string> read_strings(int fd) {
     vector<string> result;
     int count = read_number(fd);
+    if(count < 0)
+        return result;
     for(int i=0; i<count; i++) {
         result.push_back(read_string(fd));
     }
@@ -655,7 +662,7 @@ struct Posix : RtapiApp
     void do_delay(long ns);
 };
 
-static void signal_handler(int sig, siginfo_t *si, void *uctx)
+static void signal_handler(int sig, siginfo_t * /*si*/, void * /*uctx*/)
 {
     switch (sig) {
     case SIGXCPU:
@@ -704,7 +711,22 @@ static void configure_memory()
                   "mallopt(M_MMAP_MAX, -1) failed\n");
     }
 #endif
-    char *buf = static_cast<char *>(malloc(PRE_ALLOC_SIZE));
+    /*
+     * The following code seems pointless, but there is a non-observable effect
+     * in the allocation and loop.
+     *
+     * The malloc() is forced to set brk() because mmap() allocation is
+     * disabled in a call to mallopt() above. All touched pages become resident
+     * and locked in the loop because of above mlockall() call (see notes in
+     * mlockall(2)). The mallopt() trim setting prevents the brk() from being
+     * reduced after free(), effectively creating an open space for future
+     * allocations that will not generate page faults.
+     *
+     * The qualifier 'volatile' on the buffer pointer is required because newer
+     * clang would remove the malloc(), for()-loop and free() completely.
+     * Marking 'buf' volatile ensures that the code will remain in place.
+     */
+    volatile char *buf = static_cast<volatile char *>(malloc(PRE_ALLOC_SIZE));
     if (buf == NULL) {
         rtapi_print_msg(RTAPI_MSG_WARN, "malloc(PRE_ALLOC_SIZE) failed\n");
         return;
@@ -717,7 +739,7 @@ static void configure_memory()
              * memory and never given back to the system. */
             buf[i] = 0;
     }
-    free(buf);
+    free((void *)buf);
 }
 
 static int harden_rt()
@@ -933,7 +955,7 @@ rtapi_task *RtapiApp::get_task(int task_id) {
     return task;
 }
 
-void RtapiApp::unexpected_realtime_delay(rtapi_task *task, int nperiod) {
+void RtapiApp::unexpected_realtime_delay(rtapi_task *task, int /*nperiod*/) {
     static int printed = 0;
     if(!printed)
     {

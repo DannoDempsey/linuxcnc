@@ -337,6 +337,7 @@ man9/hm2_eth.9
 man9/hm2_pci.9
 man9/hm2_rpspi.9
 man9/hm2_spi.9
+man9/hm2_spix.9
 man9/homecomp.9
 man9/hostmot2.9
 man9/hypot.9
@@ -389,9 +390,12 @@ man9/oneshot.9
 man9/opto_ac5.9
 man9/or2.9
 man9/orient.9
+man9/pcl720.9
 man9/pentakins.9
 man9/pid.9
 man9/plasmac.9
+man9/pluto_servo.9
+man9/pluto_step.9
 man9/pumakins.9
 man9/pwmgen.9
 man9/raster.9

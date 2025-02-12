@@ -454,7 +454,7 @@ static int max_mdi_queued_commands = MAX_MDI_QUEUE;
   It returns 0 if all messages check out, -1 if any of them fail. If one
   fails, the rest of the list is not checked.
  */
-static int checkInterpList(NML_INTERP_LIST * il, EMC_STAT * stat)
+static int checkInterpList(NML_INTERP_LIST * il, EMC_STAT * /*stat*/)
 {
     while (il->len() > 0) {
 	auto cmd = il->get();
@@ -710,7 +710,7 @@ void readahead_waiting(void)
 	    int was_open = taskplanopen;
 	    if (was_open) {
 		emcTaskPlanClose();
-		if (emc_debug & EMC_DEBUG_INTERP && was_open) {
+		if ((emc_debug & EMC_DEBUG_INTERP) && was_open) {
 		    rcs_print
 			("emcTaskPlanClose() called at %s:%d\n",
 			 __FILE__, __LINE__);
@@ -3147,14 +3147,14 @@ static int iniLoad(const char *filename)
 
     // set flags if RCS_DEBUG in ini file
     if ((inistring = inifile.Find("RCS_DEBUG", "EMC"))) {
-        static long int flags;
+        long unsigned int flags;
         if (sscanf(*inistring, "%lx", &flags) < 1) {
             perror("failed to parse [EMC] RCS_DEBUG");
         }
         // clear all flags
         clear_rcs_print_flag(PRINT_EVERYTHING);
         // set parsed flags
-        set_rcs_print_flag(flags);
+        set_rcs_print_flag((long)flags);
     }
     // output infinite RCS errors by default
     max_rcs_errors_to_print = -1;
@@ -3164,16 +3164,18 @@ static int iniLoad(const char *filename)
         }
     }
 
-    inistring = inifile.Find("VERSION", "EMC");
-    rtapi_strlcpy(version, inistring.value_or("unknown"), LINELEN-1);
+	if (emc_debug & EMC_DEBUG_CONFIG) {
+		inistring = inifile.Find("VERSION", "EMC");
+		rtapi_strlcpy(version, inistring.value_or("unknown"), LINELEN-1);
 
-    inistring = inifile.Find("MACHINE", "EMC");
-    rtapi_strlcpy(machine, inistring.value_or("unknown"), LINELEN-1);
-    extern char *program_invocation_short_name;
-    rcs_print(
-	"%s (%d) task: machine '%s'  version '%s'\n",
-	program_invocation_short_name, getpid(), machine, version
-    );
+		inistring = inifile.Find("MACHINE", "EMC");
+		rtapi_strlcpy(machine, inistring.value_or("unknown"), LINELEN-1);
+		extern char *program_invocation_short_name;
+		rcs_print(
+		"%s (%d) task: machine '%s'  version '%s'\n",
+		program_invocation_short_name, getpid(), machine, version
+		);
+	}
 
     if ((inistring = inifile.Find("NML_FILE", "EMC"))) {
 	// copy to global
@@ -3316,7 +3318,7 @@ int main(int argc, char *argv[])
     }
 
     // create EMC2_TMP_DIR if it's not existing, yet
-    struct stat s = {0};
+    struct stat s;
     if (stat(EMC2_TMP_DIR, &s) != 0) {
         if(mkdir(EMC2_TMP_DIR, 0700) != 0) {
 		rcs_print_error("mkdir(%s): %s", EMC2_TMP_DIR, strerror(errno));

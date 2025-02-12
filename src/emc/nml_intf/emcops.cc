@@ -152,19 +152,20 @@ EMC_TASK_STAT_MSG(EMC_TASK_STAT_TYPE, sizeof(EMC_TASK_STAT))
     queuedMDIcommands = 0;
 }
 
-EMC_TOOL_STAT::EMC_TOOL_STAT():
-EMC_TOOL_STAT_MSG(EMC_TOOL_STAT_TYPE, sizeof(EMC_TOOL_STAT))
+EMC_TOOL_STAT::EMC_TOOL_STAT()
+  : EMC_TOOL_STAT_MSG(EMC_TOOL_STAT_TYPE, sizeof(EMC_TOOL_STAT)),
+    pocketPrepped(0), // idx
+    toolInSpindle(0), // toolno
+    toolFromPocket(0) // tool_from_pocket
+#ifndef TOOL_NML // {
+    , toolTableCurrent(tooldata_entry_init())
+#endif
 {
-    pocketPrepped = 0; // idx
-    toolInSpindle = 0; // toolno
-    toolFromPocket = 0; // tool_from_pocket
 #ifdef TOOL_NML //{
     int idx;
     for (idx = 0; idx < CANON_POCKETS_MAX; idx++) {
         toolTable[idx] = tooldata_entry_init();
     }
-#else //}{
-    toolTableCurrent = tooldata_entry_init();
 #endif //}
 }
 
@@ -196,7 +197,7 @@ EMC_COOLANT_STAT::EMC_COOLANT_STAT():EMC_COOLANT_STAT_MSG(EMC_COOLANT_STAT_TYPE,
 }
 
 // overload = , since class has array elements
-EMC_TOOL_STAT EMC_TOOL_STAT::operator =(EMC_TOOL_STAT s)
+EMC_TOOL_STAT& EMC_TOOL_STAT::operator =(const EMC_TOOL_STAT& s)
 {
     pocketPrepped = s.pocketPrepped; // idx
     toolInSpindle = s.toolInSpindle; // toolno
@@ -221,7 +222,7 @@ EMC_TOOL_STAT EMC_TOOL_STAT::operator =(EMC_TOOL_STAT s)
     toolTableCurrent = tdata;
 #endif //}
 
-    return s;
+    return *this;
 }
 
 EMC_STAT::EMC_STAT():EMC_STAT_MSG(EMC_STAT_TYPE, sizeof(EMC_STAT))

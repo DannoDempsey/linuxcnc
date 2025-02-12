@@ -384,7 +384,7 @@ static void do_homing_sequence(void)
             }
         }
         sequence_is_set = 1;
-        //drop through----drop through----drop through----drop through
+        /* Fallthrough */
 
     case HOME_SEQUENCE_DO_ONE_SEQUENCE:
         // Expect multiple joints with home_state==HOME_START
@@ -412,8 +412,7 @@ static void do_homing_sequence(void)
             }
         }
         sequence_state = HOME_SEQUENCE_START;
-
-        //drop through----drop through----drop through----drop through
+        /* Fallthrough */
 
     case HOME_SEQUENCE_START:
         // Request to home all joints or a single sequence
@@ -464,7 +463,7 @@ static void do_homing_sequence(void)
         }
         /* tell the world we're on the job */
         homing_active = 1;
-        //drop through----drop through----drop through----drop through
+        /* Fallthrough */
 
     case HOME_SEQUENCE_START_JOINTS:
         seen = 0;

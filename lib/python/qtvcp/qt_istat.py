@@ -20,12 +20,29 @@ except:
 
 INIPATH = os.environ.get('INI_FILE_NAME', '/dev/null')
 
-HOME = os.environ.get('LINUXCNC_HOME', '/usr')
-if HOME is not None:
-    IMAGEDIR = os.path.join(HOME, "share", "qtvcp", "images")
+RIP_FLAG = bool(os.environ.get('LINUXCNC_RIP_FLAG', False))
+
+if RIP_FLAG:
+    BASE = os.environ.get('EMC2_HOME', None)
+else:
+    BASE = os.environ.get('LINUXCNC_HOME', None)
+    # fallback until the RIP_FLAG is common
+    if BASE is None:
+        BASE = os.environ.get('EMC2_HOME', None)
+# catch all
+if BASE is None:
+    BASE = '/usr'
+    if RIP_FLAG:
+        log.verbose('Linuxcnc Base directory not found in environmental variable: EMC2_HOME')
+    else:
+        log.verbose('Linuxcnc Base directory not found in environmental variable: LINUXCNC_HOME')
+
+log.verbose('Using Linuxcnc Base directory: {}'.format(BASE))
+
+if BASE is not None:
+    IMAGEDIR = os.path.join(BASE, "share", "qtvcp", "images")
 else:
     IMAGEDIR = None
-
 
 class _IStat(object):
     def __init__(self, ini=None):
@@ -37,6 +54,9 @@ class _IStat(object):
 
         self.LINUXCNC_IS_RUNNING = bool(INIPATH != '/dev/null')
         self.ENVIRO_INI_PATH = INIPATH
+
+        # Are we using RIP or installed version?
+        self.RIP_FLAG = RIP_FLAG
 
         if not self.LINUXCNC_IS_RUNNING:
             # Reset the log level for this module
@@ -50,7 +70,7 @@ class _IStat(object):
         self.USER_M_PATH_LIST = []
 
         self.IMAGE_PATH = IMAGEDIR
-        self.LIB_PATH = os.path.join(HOME, "share", "qtvcp")
+        self.LIB_PATH = os.path.join(BASE, "share", "qtvcp")
         self.TITLE = ""
         self.ICON = ""
         # this is updated in qtvcp.py on startup
@@ -402,7 +422,7 @@ class _IStat(object):
         self.MAX_FEED_OVERRIDE = float(self.get_error_safe_setting("DISPLAY", "MAX_FEED_OVERRIDE", 1.5)) * 100
         if self.INI.find("TRAJ", "MAX_LINEAR_VELOCITY") is None:
             if self.LINUXCNC_IS_RUNNING:
-                log.critical('INI Parsing: No MAX_LINEAR_VELOCITY Entry in TRAJ')
+                log.critical('INI Parsing Error, No MAX_LINEAR_VELOCITY Entry in TRAJ')
         self.MAX_TRAJ_VELOCITY = float(self.get_error_safe_setting("TRAJ", "MAX_LINEAR_VELOCITY",
                                             self.get_error_safe_setting("AXIS_X", "MAX_VELOCITY", 5))) * 60
 
@@ -648,7 +668,7 @@ class _IStat(object):
                ('ANGULAR' in detail and not self.HAS_ANGULAR_JOINT):
                 return default
             else:
-                log.warning('INI Parsing: No {} Entry in {}, Using: {}'.format(detail, heading, default))
+                log.warning('INI Parsing Error, No {} Entry in {}, Using: {}'.format(detail, heading, default))
             return default
 
     # return a found float or else None by default, anything else by option
@@ -731,7 +751,7 @@ class _IStat(object):
                 temp.append('.ngc')
             return temp
         except Exception as e:
-            log.warning('Valid Extension Parsing: {}\n Using Default: *'.format(e))
+            log.warning('Valid Extension Parsing Error: {}\n Using Default: *'.format(e))
             return ('*')
 
     def get_filters_extensions(self):
@@ -747,7 +767,7 @@ class _IStat(object):
             all_extensions.append(['All (*)', ['*']])
             return all_extensions
         except Exception as e:
-            log.warning('filter Extension Parsing: {}\n Using Default: ALL (*)'.format(e))
+            log.warning('filter Extension Parsing Error: {}\n Using Default: ALL (*)'.format(e))
             return [['All (*)', ['*']]]
 
     # get filter extensions in QT format
@@ -764,7 +784,7 @@ class _IStat(object):
                 temp = '%s %s' % (temp, i)
             return temp
         except Exception as e:
-            log.warning('Qt filter Extension Parsing: {}\n Using Default: ALL (*)'.format(e))
+            log.warning('Qt filter Extension Parsing Error: {}\n Using Default: ALL (*)'.format(e))
             return ('All (*)')
 
     def program_extension_valid(self, fname):

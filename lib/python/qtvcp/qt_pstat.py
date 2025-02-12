@@ -26,7 +26,7 @@ from . import logger
 LOG = logger.getLogger(__name__)
 
 
-# Force the log level for this module
+# Force the log level for this modul
 # LOG.setLevel(logger.DEBUG) # One of DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 # BASE is the absolute path to linuxcnc base
@@ -50,10 +50,24 @@ class _PStat(object):
             self.PLUGINDIR = os.path.join(here,"plugins")
             self.VISMACHDIR = os.path.join(self.LIBDIR, "qt_vismach")
 
+            self.RIP_FLAG = bool(os.environ.get('LINUXCNC_RIP_FLAG', False))
+
+            if self.RIP_FLAG:
+                BASE = os.environ.get('EMC2_HOME', None)
+            else:
+                BASE = os.environ.get('LINUXCNC_HOME', None)
+                # fallback until the RIP_FLAG is common
+                if BASE is None:
+                    BASE = os.environ.get('EMC2_HOME', None)
+
+            # catch all
+            if BASE is None:
+                BASE = '/usr'
+                LOG.debug('Linuxcnc Home directory found in environmental variable: {}'.format(BASE))
+
             # share directory moves when using RIP vrs installed
-            home = os.environ.get('LINUXCNC_HOME', '/usr')
-            if home is not None:
-                self.SHAREDIR = os.path.join(home,"share", "qtvcp")
+            self.SHAREDIR = os.path.join(BASE,"share", "qtvcp")
+
             self.IMAGEDIR = os.path.join(self.SHAREDIR,  "images")
             self.SCREENDIR = os.path.join(self.SHAREDIR, "screens")
             self.PANELDIR = os.path.join(self.SHAREDIR, "panels")

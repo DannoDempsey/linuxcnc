@@ -68,13 +68,13 @@ input needs to be set to set home. Additionally in 'counts' mode the usual index
 logic of the encoder counters is supported.
 
 With some carousel designs the carousel will not stop immediately. To allow for
-this set the \\fBlign-dc\\fR pin to a low velocity to be used for a final latching move, and
-set the\\fBdecel-time\\fR to a suitable value.
+this set the \\fBalign-dc\\fR pin to a low velocity to be used for a final latching move, and
+set the \\fBdecel-time\\fR to a suitable value.
 Once the decel-time has expired the carousel will, if it was moving forwards, reverse back on
-to the position marker, off of the arker and then bak on to the FWD edge. If moving in reverse
+to the position marker, off of the marker and then back on to the FWD edge. If moving in reverse
 it will continue off the marker and then reverse slowly on to the FWD edge.
-This algnment is only possible with a motor-vel controlled bidirectional carousel,
-Other combinations will be accepted but probably won't have the desired behaviour.
+This alignment is only possible with a motor-vel controlled bidirectional carousel,
+Other combinations will be accepted but probably will not have the desired behaviour.
 Some tuning will be needed of align-dc and decel-time to achieve reliable operation.
 
 In the unusual case that the index and pulse signals do not align it is
@@ -357,6 +357,7 @@ FUNCTION(_){
         }
         state = DIR_CHOOSE;
         ready = 0;
+        /* Fallthrough */
     case DIR_CHOOSE: // choose direction
         if (mod_pocket < 1 || mod_pocket > inst_pockets) {
             state = WAITING;
@@ -403,6 +404,7 @@ FUNCTION(_){
             motor_dir = 1;
         }
         state = MOVE;
+        /* Fallthrough */
     case MOVE: // moving
         if ((current_position != mod_pocket) && enable){
             deb = debounce;
@@ -493,6 +495,7 @@ FUNCTION(_){
         counts_target += scale * inst_pockets;
         old_index = 1; // ensure 0->1 cycle of home sensor
         state = HOME_WAIT;
+        /* Fallthrough */
     case HOME_WAIT: ;// waiting for index & pulse
         int ind = 0;
         if (inst_code == 'C'){
