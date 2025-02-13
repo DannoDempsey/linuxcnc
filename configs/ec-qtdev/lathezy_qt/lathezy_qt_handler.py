@@ -16,8 +16,7 @@ from qtvcp.widgets.stylesheeteditor import  StyleSheetEditor as SSE
 from qtvcp.lib.gcodes import GCodes
 from qtvcp.lib.toolbar_actions import ToolBarActions
 from qtvcp.core import Status, Action, Info, Tool, Path, Qhal
-from qt5_graphics import Lcnc_3dGraphics as Dro
-import qt5_graphics 
+from qt5_graphics import Lcnc_3dGraphics as DRO
 
 # Set up config parser so we can look in the .ini file 
 #from ConfigParser import ConfigParser
@@ -45,7 +44,7 @@ TOOLBAR = ToolBarActions()
 STYLEEDITOR = SSE()
 #GSTAT = GStat()
 #GCODES = GCodes()
-DRO = Dro()
+#DRO = Dro()
 
 
 # Types for add status message
@@ -91,6 +90,12 @@ class HandlerClass:
         self.active_joint = 0
         self.active_jog_flag = 0
         
+        # Lathe DRO variables
+        self.css_mode = 0
+        self.show_dtg = False
+        self.show_velocity = False
+        self.show_offsets = False
+
         # Variables for the turret.
         self.current_tool_num = 0
         self.request_tool_num = 0
@@ -131,24 +136,11 @@ class HandlerClass:
         
     def class_patch__(self): 
         self.gcode_editor_patch()
-        #self.qt5_graphics_patch()
 
     def gcode_editor_patch(self):    
         GCODE.editMode = self.gcode_editMode
         GCODE.readOnlyMode = self.gcode_readOnlyMode
 
-    def qt5_graphics_patch(self):
-        self.old_dro_format = DRO.dro_format
-        DRO.dro_format = self.new_dro_format
-
-    # Class patching a new DRO format is buggy and requires a bunch of duplicate code
-    # easier to modify qt5_graphics and tailor it to a lathe display
-    # TODO:  
-    #def new_dro_format(self,s,spd,dtg,limit,homed,positions,axisdtg,g5x_offset,g92_offset,tlo_offset):
-        # Call a function
-        #print("DEBUG: is_lathe result:", DRO.is_lathe())
-
-        
     # At this point:
     # - the widgets are instantiated.
     # - the HAL pins are built but HAL is not set ready
@@ -158,6 +150,7 @@ class HandlerClass:
         self.init_widgets()
         self.init_jog_inc()
         self.init_turret_tools()
+        self.class_patch__()
         # Uncomment to print out a list of available qtvcp objects
         # self.init_library()
         
@@ -321,6 +314,14 @@ class HandlerClass:
     def update_machine_mode(self):
         self.update_metric_mode()
         self.update_diameter_mode()
+        #self.update_lathe_status()
+
+    # Used by the function lathe_dro_format() to 
+    def update_lathe_status(self):
+        current_gcodes = STATUS.stat.gcodes
+        self.is_diameter_mode = 70 in current_gcodes
+        self.css_mode = 960 in current_gcodes
+
         
     def update_metric_mode(self):    
         self.is_metric_mode = STATUS.is_metric_mode()
@@ -346,8 +347,8 @@ class HandlerClass:
         # Check for G7 (diameter mode) and G8 (radius mode) 
         # Note; G7 = 70, G8 = 80 
         self.is_diameter_mode = 70 in current_gcodes
-        #self.is_radius_mode = 'G8' in converted_gcodes
-
+        self.css_mode = 960 in current_gcodes
+       
         # Debug print statements to track mode changes
         #print("Is Diameter Mode (G7): %d" % self.is_diameter_mode)
             

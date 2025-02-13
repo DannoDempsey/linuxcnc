@@ -253,6 +253,8 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
         self.use_relative = True
         self.show_tool = True
         self.show_lathe_radius = False
+        self.show_lathe_css = False
+        self.show_lathe_velocity = False
         self.show_dtg = True
         self.grid_size = 0.0
         temp = self.inifile.find("DISPLAY", "LATHE")
@@ -330,10 +332,20 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
             s.poll()
         except:
             return
+        # Track the status of 
+        #   - G7/G8 Dia. or Radius Mode 
+        #   - G96/G97 CSS or RPM mode
+        #   - G00/G01,G02,G03 show rapid velocity or feed rate
+        current_gcodes = s.gcodes
+        self.show_lathe_radius = 80 in current_gcodes
+        self.show_lathe_css = 960 in current_gcodes
+        self.show_lathe_velocity = 00 in current_gcodes
+        # Add them to the fingerprint 
         fingerprint = (self.logger.npts, self.soft_limits(),
             s.actual_position, s.joint_actual_position,
             s.homed, s.g5x_offset, s.g92_offset, s.limit, s.tool_in_spindle,
-            s.motion_mode, s.current_vel)
+            s.motion_mode, s.current_vel, self.show_lathe_radius, self.show_lathe_css,
+            self.show_lathe_velocity)
 
         if fingerprint != self.fingerprint:
             self.fingerprint = fingerprint
@@ -639,18 +651,20 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
             droposstrs.append(diaformat % ("Vel", spd))
 
         return limit, homed, posstrs, droposstrs
-
+    
     # This overrides glcannon.py method so we can change the DRO
     def dro_format(self,s,spd,dtg,limit,homed,positions,axisdtg,g5x_offset,g92_offset,tlo_offset):
+
+            # Formatting Options           
             if self.metric_units:
                 format = "% 6s:" + self.dro_mm
                 if self.show_dtg:
                     droformat = " " + format + "  DTG %1s:" + self.dro_mm
                 else:
                     droformat = " " + format
-                offsetformat = "% 5s %1s:" + self.dro_mm + "  G92 %1s:" + self.dro_mm
-                toolformat = "% 5s %1s:" + self.dro_mm
-                rotformat = "% 5s %1s:" + self.dro_deg
+                offsetformat = "% 6s %1s:" + self.dro_mm + "  G92 %1s:" + self.dro_mm
+                toolformat = "% 6s %1s:" + self.dro_mm
+                rotformat = "% 6s %1s:" + self.dro_deg
 
             else:
                 format = "% 6s:" + self.dro_in
@@ -658,13 +672,14 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
                     droformat = " " + format + "  DTG %1s:" + self.dro_in
                 else:
                     droformat = " " + format
-                offsetformat = "% 5s %1s:" + self.dro_in + "  G92 %1s:" + self.dro_in
-                toolformat = "% 5s %1s:" + self.dro_in
-                rotformat = "% 5s %1s:" + self.dro_deg
+                offsetformat = "% 6s %1s:" + self.dro_in + "  G92 %1s:" + self.dro_in
+                toolformat = "% 6s %1s:" + self.dro_in
+                rotformat = "% 6s %1s:" + self.dro_deg
             diaformat = " " + format
 
             posstrs = []
             droposstrs = []
+
             for i in range(9):
                 if self.is_lathe() and i ==1: continue
                 a = "XYZABCUVW"[i]
@@ -675,26 +690,6 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
                     else:
                         droposstrs.append(droformat % (a, positions[i]))
             droposstrs.append("")
-
-            for i in range(9):
-                if self.is_lathe() and i ==1: continue
-                index = s.g5x_index
-                if index<7:
-                    label = "G5%d" % (index+3)
-                else:
-                    label = "G59.%d" % (index-6)
-
-                a = "XYZABCUVW"[i]
-                if s.axis_mask & (1<<i):
-                    droposstrs.append(offsetformat % (label, a, g5x_offset[i], a, g92_offset[i]))
-            droposstrs.append(rotformat % (label, 'R', s.rotation_xy))
-
-            droposstrs.append("")
-            for i in range(9):
-                if self.is_lathe() and i ==1: continue
-                a = "XYZABCUVW"[i]
-                if s.axis_mask & (1<<i):
-                    droposstrs.append(toolformat % ("TLO", a, tlo_offset[i]))
 
             # if its a lathe only show radius or diameter as per property
             if self.is_lathe():
@@ -715,6 +710,55 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
                     else:
                         droposstrs.insert(1, diaformat % ("Dia", positions[0]*2.0))
 
+            
+            # Show DTG
+            if self.show_dtg:
+                for i in range(9):
+                    if s.axis_mask & (1 << i):
+                        a = "XYZABCUVW"[i]
+                        # Force DTG R to show 
+                        if self.is_lathe() and self.show_lathe_radius and i == 0: 
+                        #posstrs.append(format % (f"DTG {a}", axisdtg[i]))     
+                            posstrs.append(format % (f"DTG R", axisdtg[i]))
+                        else:
+                            posstrs.append(format % (f"DTG {a}", axisdtg[i]))    
+
+            # Show G5x and G92 Offsets 
+            for i in range(9):
+                if self.is_lathe() and i ==1: continue
+                index = s.g5x_index
+                if index<7:
+                    label = "G5%d" % (index+3)
+                else:
+                    label = "G59.%d" % (index-6)
+
+                a = "XYZABCUVW"[i]
+                if s.axis_mask & (1<<i):
+                    if self.is_lathe():
+                        if self.metric_units:
+                            droposstrs.append(f"{label} {a}: {self.dro_mm % g5x_offset[i]}")
+                        else:
+                            droposstrs.append(f"{label} {a}: {self.dro_in % g5x_offset[i]}")
+                    else:        
+                        droposstrs.append(offsetformat % (label, a, g5x_offset[i], a, g92_offset[i]))
+            
+            # Show Rotational offsets for Mill only
+            if not self.is_lathe():
+                droposstrs.append(rotformat % (label, 'R', s.rotation_xy))
+
+            droposstrs.append("")
+            
+            # Show TLO offsets for Mill only
+            for i in range(9):
+                if not self.is_lathe():
+                    a = "XYZABCUVW"[i]
+                    if s.axis_mask & (1<<i):
+                        droposstrs.append(toolformat % ("TLO", a, tlo_offset[i]))
+
+            # Add a blank seperator before velocity
+            droposstrs.append("")
+
+            # Show Velocity
             if self.show_velocity:
                 if self.metric_units:
                     feed = self.dro_vel_mm % (spd)
@@ -724,18 +768,30 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
                 if self.is_lathe():
                     if self.metric_units:
                         sf = self.sf_mm  % (3.14 * positions[0]*2.0 * self.spindle_speed/1000)
-                        if self.spindle_speed != 0:
-                            feed = self.fpr_mm  % (self.spindle_speed and spd/self.spindle_speed)
+                        # Show FPR if not in Rapid movement
+                        if self.spindle_speed != 0 and not self.show_lathe_velocity:
+                            feed = self.fpr_mm  % (spd/self.spindle_speed)
+
                     else:
                         sf = self.sf_in  % (3.14 * positions[0]*2.0 * self.spindle_speed/12)
-                        if self.spindle_speed != 0:
-                            feed = self.fpr_in  % (self.spindle_speed and spd/self.spindle_speed)
+                        if self.spindle_speed != 0 and not self.show_lathe_velocity:
+                            feed = self.fpr_in  % (spd/self.spindle_speed)
+                    
+                    # If G96 is active show feed, RPM, CSS
+                    if self.show_lathe_css:
+                        posstrs.insert(len(droposstrs), "{} RPM: {} {}".format(feed,self.spindle_speed,sf))
 
-                    posstrs.append("{} {} RPM: {}".format(feed,sf,self.spindle_speed))
+                    # If G97 is active, show feed and RPM Only
+                    else:
+                        posstrs.insert(len(droposstrs), "{} RPM: {}".format(feed,self.spindle_speed))
+                       
+                # Standard Mill display
                 else:
                     if self.metric_units:
+                        feed = self.dro_vel_mm % (spd)
                         sf = self.sf_mm  % (3.14 * self._tool_dia * self.spindle_speed/1000)
                     else:
+                        feed = self.dro_vel % (spd)
                         sf = self.sf_in  % (3.14 * self._tool_dia * self.spindle_speed/12)
                     posstrs.append("{} {} RPM: {}".format(feed,sf,self.spindle_speed))
 
@@ -747,9 +803,6 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
                     droposstrs.insert(pos, "  {} {} RPM: {}".format(feed,sf,self.spindle_speed))
                 else:
                     droposstrs.insert(pos, "{} {} RPM: {}".format(feed,sf,self.spindle_speed))
-
-            if self.show_dtg:
-                posstrs.append(format % ("DTG", dtg))
 
             # show extrajoints (if not showing offsets)
             if (s.num_extrajoints >0 and (not self.get_show_offsets())):
@@ -763,7 +816,6 @@ class Lcnc_3dGraphics(QOpenGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
                     posstrs.append(jstr)
 
             return limit, homed, posstrs, droposstrs
-
 
     def minimumSizeHint(self):
         return QSize(50, 50)
