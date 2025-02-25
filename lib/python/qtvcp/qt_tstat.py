@@ -79,12 +79,12 @@ class _TStat(object):
 
     def SAVE_TOOLFILE(self, array):
         return self._save(array)
-
+    
     def ADD_TOOL(self, newtool=[-99, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 'New Tool']):
         info = self.GET_TOOL_MODELS()
         info[0].insert(0, newtool)
         return self._save(info[0] + info[1])
-
+    
     def DELETE_TOOLS(self, tools):
         ta = self.GET_TOOL_ARRAY()
         if type(tools) == int:
@@ -193,16 +193,59 @@ class _TStat(object):
     # qtvcp just adds the extra tool wear positions (x and z) to the original array 
     def CONVERT_TO_WEAR_TYPE(self, data):
         if data is None:
-            data = ([], [])
+            data = ([], [])    
         if not INFO.MACHINE_IS_LATHE:
             maintool = data[0] + data[1]
             weartool = []
         else:
             maintool = data[0]
             weartool = data[1]
-        # print 'main',data
+        #print ('main',data)
         tool_num_list = {}
         full_tool_list = []
+        if not INFO.MACHINE_IS_LATHE:
+            for rnum, row in enumerate(maintool):
+                new_line = [False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
+                            'No Tool']
+                valuesInRow = [value for value in row]
+                for cnum, i in enumerate(valuesInRow):
+                    if cnum == 0:
+                        # keep a dict of actual tools numbers vrs row index
+                        tool_num_list[i] = rnum
+                    if cnum in (0, 1, 2):
+                        # transfer these positions directly to new line (offset by 1 for checkbox)
+                        new_line[cnum + 1] = i
+                    elif cnum == 3:
+                        # move Y past x wear position
+                        new_line[5] = i
+                    elif cnum == 4:
+                        # move z past y wear position
+                        new_line[7] = i
+                    elif cnum in (5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15):
+                        # a;; the rest past z wear position
+                        new_line[cnum + 4] = i
+                full_tool_list.append(new_line)
+                # print 'row',row
+                # print 'new row',new_line
+        
+        # We haven't manipulated any of the main tool data, we just want to pass it back
+        # along with the wear offsets
+        # any tool number over 10000 is a wear offset
+        # It's already been separated in the weartool variable.
+        else:
+            for rnum, row in enumerate(maintool):
+                new_line = [False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 'No Tool']
+                values = [value for value in row]
+                #print(f"Processing  Tool {rnum}: {values}")
+                full_tool_list.append(values)
+
+            for rnum, row in enumerate(weartool):
+                values = [value for value in row]
+                #print(f"Processing Wear Tool {rnum}: {values}")
+                full_tool_list.append(values)
+
+                   
+        """
         for rnum, row in enumerate(maintool):
             new_line = [False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
                         'No Tool']
@@ -226,24 +269,9 @@ class _TStat(object):
             full_tool_list.append(new_line)
             # print 'row',row
             # print 'new row',new_line
-        # any tool number over 10000 is a wear offset
-        # It's already been separated in the weartool variable.
-        # now we pull the values we need out and put it in our
-        # full tool list's  tool variable's parent tool row
-        # eg 10001 goes to tool 1, 10002 goes to tool 2 etc
-        # for now only if in lathe mode
-        if INFO.MACHINE_IS_LATHE:
-            for rnum, row in enumerate(weartool):
-                values = [value for value in row]
-                try:
-                    parent_tool = tool_num_list[(values[0] - 10000)]
-                except KeyError:
-                    LOG.error("tool wear number has no parent Tool: {}".format(values))
-                    continue
-                else:
-                    full_tool_list[parent_tool][4] = values[2]
-                    full_tool_list[parent_tool][6] = values[3]
-                    full_tool_list[parent_tool][8] = values[4]
+        """
+
+
         return full_tool_list
 
     # converts from toolwear array to linuxcnc toolfile array
@@ -296,6 +324,25 @@ class _TStat(object):
         # add wear list to full tool list if in lathe mode
         if INFO.MACHINE_IS_LATHE:
             full_tool_list = full_tool_list + tool_wear_list
+        return full_tool_list
+
+ 
+    def CONVERT_TO_LATHE_TYPE(self, arraydata, data, row, col):
+        full_tool_list = []
+
+        if arraydata is None:
+            arraydata =([])
+
+        for rnum, row in enumerate(arraydata):
+            new_line = row[1:]  #Remove QCheckBox (first element)
+            # Debug
+            #print(f"Processing data {rnum}: {new_line}")  
+            if rnum == row:
+                # modify the specified column
+                new_line[col-1] = data
+            # Debug
+            #print(f"Updated Row {row}, Column {col}: {new_line}")
+            full_tool_list.append(new_line)
         return full_tool_list
 
     # TODO check for linnuxcnc ON and IDLE which is the only safe time to edit/SAVE the tool file.

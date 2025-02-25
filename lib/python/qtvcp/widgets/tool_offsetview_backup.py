@@ -18,7 +18,7 @@ import sys
 import os
 import operator
 
-from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant, pyqtProperty, QSize, pyqtSlot, QModelIndex
+from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant, pyqtProperty, QSize, pyqtSlot
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import (QTableView, QAbstractItemView, QCheckBox,
 QItemEditorFactory,QDoubleSpinBox,QSpinBox,QStyledItemDelegate, qApp)
@@ -99,24 +99,10 @@ class ToolOffsetView(QTableView, _HalWidgetBase):
         STATUS.connect('general',self.return_value)
 
         conversion = {5:"Y", 6:'Y', 7:"Z", 8:'Z', 9:"A", 10:"B", 11:"C", 12:"U", 13:"V", 14:"W"}
-        # Shift conversion over one because we add a check box? 
-        lathe_conversion = {3:'X', 4:'Y', 5:'Z', 6:'A', 7:'B', 8:'C', 9:'U', 10:'V', 11:'W'}
-        
-        # Hide axis that are not available
-        if not INFO.MACHINE_IS_LATHE:
-            for num, let in conversion.items():
-                if let in (INFO.AVAILABLE_AXES):
-                    continue
-                self.hideColumn(num)
-        else:
-            print("Available Axis:", INFO.AVAILABLE_AXES)
-            for num, let in lathe_conversion.items():
-                if let in (INFO.AVAILABLE_AXES):
-                    print("Letter:", let)
-                    continue
-                self.hideColumn(num)
-
-        # Hide specific columns 
+        for num, let in conversion.items():
+            if let in (INFO.AVAILABLE_AXES):
+                continue
+            self.hideColumn(num)
         if not INFO.MACHINE_IS_LATHE:
             for i in (4,6,8,16,17,18):
                 self.hideColumn(i)
@@ -179,24 +165,14 @@ class ToolOffsetView(QTableView, _HalWidgetBase):
         self.setWindowTitle(sf)
         # row 0 is not editable (checkbox position)
         # column 19 is the descriptive text column
-        if not INFO.MACHINE_IS_LATHE:
-            if item.column() == 19:
-                self.callTextDialog(text,item)
-            elif item.column() <19 and item.column() > 0:
-                self.callDialog(text,item)
-        else:
-            if item.column() == 16:
-                self.callTextDialog(text, item)
-            elif item.column() < 16 and item.column() > 0:
-                self.callDialog(text,item)
-                
+        if item.column() == 19:
+            self.callTextDialog(text,item)
+        elif item.column() <19 and item.column() > 0:
+            self.callDialog(text,item)
+
     # alphanumerical
     def callTextDialog(self, text,item):
-        if not INFO.MACHINE_IS_LATHE:
-            text = self.tablemodel.arraydata[item.row()][19]
-        else:
-            text = self.tablemodel.arraydata[item.row()][16]
-
+        text = self.tablemodel.arraydata[item.row()][19]
         tool = self.tablemodel.arraydata[item.row()][1]
         mess = {'NAME':self.text_dialog_code,'ID':'%s__' % self.objectName(),
                 'PRELOAD':text, 'TITLE':'Tool {} Description Entry'.format(tool),
@@ -282,8 +258,7 @@ class ToolOffsetView(QTableView, _HalWidgetBase):
         row = new.row()
         col = new.column()
         data = self.tablemodel.data(new)
-        print('Entered data:', data, row, col)
-        """
+        #print('Entered data:', data, row,col)
         # now update linuxcnc to the change
         try:
             if STATUS.is_status_valid():
@@ -300,45 +275,7 @@ class ToolOffsetView(QTableView, _HalWidgetBase):
                 #self.resizeColumnsToContents()
         except Exception as e:
             LOG.exception("offsetpage widget error: MDI call error", exc_info=e)
-        """
-        if not INFO.MACHINE_IS_LATHE:
-            try:
-                if STATUS.is_status_valid():
-                    #for i in self.tablemodel.arraydata:
-                    #    LOG.debug("2>>> = {}".format(i))
-                    error = TOOL.SAVE_TOOLFILE(TOOL.CONVERT_TO_STANDARD_TYPE(self.tablemodel.arraydata))
-                    if error:
-                        raise
-                    ACTION.RECORD_CURRENT_MODE()
-                    ACTION.CALL_MDI('g43')
-                    ACTION.RESTORE_RECORDED_MODE()
-                    STATUS.emit('reload-display')
-                    #self.tablemodel.update()
-                    #self.resizeColumnsToContents()
-            except Exception as e:
-                LOG.exception("offsetpage widget error: MDI call error", exc_info=e)   
-
-        else:
-            try:
-                if STATUS.is_status_valid():
-                    #for i in self.tablemodel.arraydata:
-                    #    print("model data = {}".format(i))
-                    error = TOOL.SAVE_TOOLFILE(TOOL.CONVERT_TO_LATHE_TYPE(self.tablemodel.arraydata, data, row, col))
-                    if error:
-                        raise
-                    ACTION.RECORD_CURRENT_MODE()
-                    ACTION.CALL_MDI('g43')
-                    ACTION.RESTORE_RECORDED_MODE()
-                    STATUS.emit('reload-display')
-            except Exception as e:
-                LOG.exception("offsetpage widget error: MDI call error", exc_info=e) 
-
         self.editing_flag = False
-    
-    def save_tool_file(self):
-        if not STATUS.is_auto_running():
-            LOG.debug('Saving Tool File')
-            TOOL.SAVE_TOOLFILE(TOOL.CONVERT_TO_LATHE_TYPE(self.tablemodel.arraydata, None, None, None))
 
     def add_tool(self):
         if not STATUS.is_auto_running():
@@ -486,28 +423,13 @@ class MyTableModel(QAbstractTableModel):
         self.diameter_display = False
         self._highlightcolor = '#00ffff'
         self._selectedcolor = '#00ff00'
-        # Define headers, for lathes and mill
-        print(f"INFO.MACHINE_IS_LATHE: {INFO.MACHINE_IS_LATHE}")
-        self.headerdata = []
-        self.mill_headerdata = ['','tool','pocket','X','X Wear', 'Y', 'Y Wear', 'Z', 'Z Wear', 'A', 'B', 'C', 'U', 'V', 'W', 'Diameter', 'Front Angle', 'Back Angle','Orient','Comment']
-        self.lathe_headerdata = ['','tool','pocket','X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W', 'Diameter', 'Front Angle', 'Back Angle','Orient','Comment']
-        
+        self.headerdata = ['','tool','pocket','X','X Wear', 'Y', 'Y Wear', 'Z', 'Z Wear', 'A', 'B', 'C', 'U', 'V', 'W', 'Diameter', 'Front Angle', 'Back Angle','Orient','Comment']
         if INFO.MACHINE_IS_LATHE:
-            self.headerdata = self.lathe_headerdata
-            self.arraydata = [[0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,'No Tool']]
-        else: 
-            self.headerdata = self.mill_headerdata
-            self.arraydata = [[0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,'No Tool']]
+            self.headerdata[2] = 'Stn'
         self.vheaderdata = []
-        self.show_wear_offsets = False
-        self.hidden_rows = set()
-
+        self.arraydata = [[0, 0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, 0,'No Tool']]
         STATUS.connect('toolfile-stale',lambda o, d: self.update(d))
         self.update(None)
-
-    def wearOffsetsDisplay(self, state):
-        self.show_wear_offsets = state
-        self.layoutChanged.emit()
 
     def metricDisplay(self, state):
         self.metric_display = state
@@ -521,7 +443,7 @@ class MyTableModel(QAbstractTableModel):
     def listCheckedTools(self):
         checkedlist = []
         for row in self.arraydata:
-            if row[0].isChecked():          
+            if row[0].isChecked():
                 checkedlist.append(row[1])
         return checkedlist
 
@@ -540,32 +462,13 @@ class MyTableModel(QAbstractTableModel):
     # update the internal array from STATUS's toolfile read array
     # we make sure the first array is switched to a QCheckbox widget
     def update(self, models):
-        lathe_data =[]
-        #print(f" Debugging models BEFORE CONVERT_TO_WEAR_TYPE: {models}")
         data = TOOL.CONVERT_TO_WEAR_TYPE(models)
-        #print(f" Debugging models AFTER CONVERT_TO_WEAR_TYPE: {models}")
-        if INFO.MACHINE_IS_LATHE:
-            if data in (None, []):
-                data = [[QCheckBox(), 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,'No Tool']]               
-        else:
-            if data in (None, []):
-                data = [[QCheckBox(),0, 0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, 0,'No Tool']]
-
-        for i, line in enumerate(data):  # Iterate through each row
-            #print(f"Processing Line {i}: {line}")
-            new_line = [QCheckBox()] + line[:]
-            lathe_data.append(new_line)
-            # Print the last row added
-            #print("NEW LINE DATA")
-            #print(lathe_data[-1])
-        
-        self.beginResetModel()
-        self.arraydata = lathe_data
-        self.endResetModel()
-
-        #if INFO.MACHINE_IS_LATHE:
-        #   self.filter_data()
-
+        if data in (None, []):
+            data = [[QCheckBox(),0, 0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, 0,'No Tool']]
+        for line in data:
+                if line[0] != QCheckBox:
+                    line[0] = QCheckBox()
+        self.arraydata = data
         self.layoutChanged.emit()
 
     # Returns the number of rows under the given parent.
@@ -574,45 +477,22 @@ class MyTableModel(QAbstractTableModel):
     #
     # Note: When implementing a table based model, rowCount()
     # should return 0 when the parent is valid.
-    
     def rowCount(self, parent):
-        #Return the number of visible rows, excluding hidden ones.
-        return len([row for i, row in enumerate(self.arraydata) if i not in self.hidden_rows])
-        #print("Row count requested. Current row count:", len(self.arraydata))
-        #return len(self.arraydata)
-
-    def hideRow(self, row_idx):
-        if row_idx not in self.hidden_rows:
-            self.hidden_rows.add(row_idx)
-            #print(f"Hiding Row: {row_idx}")
-            self.layoutChanged.emit()
-
-    def showRow(self, row_idx):
-        if row_idx in self.hidden_rows:
-            self.hidden_rows.remove(row_idx)
-            #print(f"Show Row: {row_idx}")
-            self.layoutChanged.emit()
+        return len(self.arraydata)
 
     # Returns the number of columns for the children of the given parent.
     # Note: When implementing a table based model, columnCount() should
     # return 0 when the parent is valid.
     def columnCount(self, parent):
-        if len(self.headerdata) > 0:
-            #print("HEADER DATA" , len(self.headerdata))
-            #print("columnCount() called, returning:", len(self.headerdata))  # Debugging
-            return len(self.headerdata)
+        if len(self.arraydata) > 0:
+            return len(self.arraydata[0])
         return 0
 
     # Returns the data stored under the given role for the item referred to by the index.
-    # Mills and Lathes have different index numbers
     def data(self, index, role=Qt.DisplayRole):
 
         if role == Qt.EditRole:
             return self.arraydata[index.row()][index.column()]
-        
-        elif role == Qt.DecorationRole and INFO.MACHINE_IS_LATHE and index.column() == 15: 
-            value = self.arraydata[index.row()][index.column()]
-            return QIcon(os.path.join(ICONPATH, "tool_pos_{}.png".format(value)))
 
         elif role == Qt.DecorationRole and index.column() == 18:
             value = self.arraydata[index.row()][index.column()]
@@ -625,12 +505,9 @@ class MyTableModel(QAbstractTableModel):
                 if value == 0.0:
                     tmpl = lambda s: self.zero_text_template % s
                     return tmpl(value)
-                elif INFO.MACHINE_IS_LATHE and col in (13,14):
+                elif col in(16,17):
                     tmpl = lambda s: self.degree_text_template % s
                     return tmpl(value)
-                elif col in (16,17):
-                    tmpl = lambda s: self.degree_text_template % s
-                    return tmpl(value)           
                 elif self.metric_display:
                     tmpl = lambda s: self.metric_text_template % s
                 else:
@@ -641,12 +518,10 @@ class MyTableModel(QAbstractTableModel):
                     if self.diameter_display:
                         value *=2
                         self.headerdata[3] = 'X D'
-                        if not INFO.MACHINE_IS_LATHE:
-                            self.headerdata[4] = 'X Wear D'
+                        self.headerdata[4] = 'X Wear D'
                     else:
                         self.headerdata[3] = 'X R'
-                        if not  INFO.MACHINE_IS_LATHE:
-                            self.headerdata[4] = 'X Wear R'
+                        self.headerdata[4] = 'X Wear R'
                 return tmpl(value)
 
             if isinstance(value, str):
@@ -667,7 +542,7 @@ class MyTableModel(QAbstractTableModel):
 
         elif role == Qt.CheckStateRole:
             if index.column() == 0:
-                #print(">>> data() row,col = %d, %d" % (index.row(), index.column()))
+                # print(">>> data() row,col = %d, %d" % (index.row(), index.column()))
                 if self.arraydata[index.row()][index.column()].isChecked():
                     return Qt.Checked
                 else:
@@ -681,37 +556,6 @@ class MyTableModel(QAbstractTableModel):
                 return QColor('red')
 
         return QVariant()
-
-    # Filter the rows either show Tools TXX < 10000 or Tools >= 10000
-    def filter_data(self):
-        #self.beginResetModel()
-        print("\n=== DEBUG: Tool Numbers in self.arraydata ===")
-        for row_idx, tool in enumerate(self.arraydata):
-            tool_number = tool[1] if isinstance(tool[1], int) else None
-            print(f"Row {row_idx}: Tool Number = {tool_number}, Full Row = {tool}")
-            if tool_number == None:
-                continue
-
-            if self.show_wear_offsets:
-                if tool_number < 10000:
-                    print("Hiding Tool:", {tool_number})
-                    self.hideRow(row_idx)
-                else:
-                    print("Showing Wear Tool:", {tool_number})
-                    self.showRow(row_idx)
-
-            else:
-                if tool_number >= 10000:
-                    print("Hiding Wear Tool:", {tool_number})
-                    self.hideRow(row_idx)
-                else:
-                    print("Showing Tool:", {tool_number})
-                    self.showRow(row_idx)
-        #self.endResetModel()
-        #self.layoutChanged.emit()
-        self.beginResetModel()
-        self.endResetModel()
-
 
 
     # Returns the item flags for the given index.
@@ -750,48 +594,25 @@ class MyTableModel(QAbstractTableModel):
             # don't emit dataChanged - return right away
             self.parent().reset()
             return True
-        if not INFO.MACHINE_IS_LATHE:
-            try:
-                if col in (1,2,18): # tool, pocket, orientation
-                    v = int(value)
-                elif col == 19:
-                    v = str(value) # comment
-                else:
-                    v = float(value)
-                    if self.metric_display:
-                        v = INFO.convert_metric_to_machine(value)
-                    else:
-                        v = INFO.convert_imperial_to_machine(value)
-                    if col in(3,4) and self.diameter_display:
-                        v /=2
-                self.arraydata[index.row()][col] = v
-            except:
-                LOG.error("Invalid data type in row {} column:{} ".format(index.row(), col))
-                return False
-            
-        else:
-            #print("Setting Lathe Data")
-            try:
-                if col in (1,2,15): # tool, pocket, orientation
-                    v = int(value)
-                elif col == 16: # comment
-                    v = str(value)
-                elif col in (13,14): # Front angle back angle
-                    v = float(value)
-                else:
-                    v = float(value)
-                    if self.metric_display:
-                        v = INFO.convert_metric_to_machine(value)
-                    else:
-                        v = INFO.convert_imperial_to_machine(value)
-                    if col in (3,) and self.diameter_display:
-                        v /= 2
-                self.arraydata[index.row()][col] = v
-                
-            except:
-                LOG.error("Invalid data type in row {} column:{} ".format(index.row(), col))
-                return False
 
+
+        try:
+            if col in (1,2,18): # tool, pocket, orientation
+                v = int(value)
+            elif col == 19:
+                v = str(value) # comment
+            else:
+                v = float(value)
+                if self.metric_display:
+                    v = INFO.convert_metric_to_machine(value)
+                else:
+                    v = INFO.convert_imperial_to_machine(value)
+                if col in(3,4) and self.diameter_display:
+                    v /=2
+            self.arraydata[index.row()][col] = v
+        except:
+            LOG.error("Invalid data type in row {} column:{} ".format(index.row(), col))
+            return False
         LOG.debug(">>> setData() value = {} ".format(value))
         self.dataChanged.emit(index, index)
         return True
@@ -799,20 +620,12 @@ class MyTableModel(QAbstractTableModel):
     # Returns the data for the given role and section in the header with the specified orientation.
     # For horizontal headers, the section number corresponds to the column number.
     # Similarly, for vertical headers, the section number corresponds to the row number.
-
-#    def headerData(self, col, orientation, role):
-#        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-#            return QVariant(self.headerdata[col])
-#        if orientation != Qt.Horizontal and role == Qt.DisplayRole:
-#            return QVariant('')
-#        return QVariant()
-    def headerData(self, section, orientation, role=Qt.DisplayRole):
-        if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            #print(f"Header requested for column {section}: {self.headerdata[section]}")  # Debugging
-            return self.headerdata[section] if section < len(self.headerdata) else None
-        return None
-
-
+    def headerData(self, col, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return QVariant(self.headerdata[col])
+        if orientation != Qt.Horizontal and role == Qt.DisplayRole:
+            return QVariant('')
+        return QVariant()
 
     # Sorts the model by column in the given order.
     def sort(self, Ncol, order):

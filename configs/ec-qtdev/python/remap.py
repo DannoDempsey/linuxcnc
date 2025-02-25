@@ -10,6 +10,91 @@ import sys
 # raises InterpreterException if execute() or read() fail
 throw_exceptions = 1 
 
+# Method to index lathe tools using Fanuc style tool change
+# T0101 calls tool 1 and applies offset 1 + Wear Offset 1 if it exists
+# T0100 calls tool 1. No offsets are applied
+def index_lathe_tool(self,**words):
+    # only run this if we are really moving the machine
+    # skip this if running task for the screen
+    if not self.task:
+        yield INTERP_OK
+    try:
+        # check there is a tool number from the Gcode
+        cblock = self.blocks[self.remap_level]
+        if not cblock.t_flag:
+            self.set_errormsg("T requires a tool number")
+            yield INTERP_ERROR
+        tool_raw = int(cblock.t_number)
+
+        # Interpret the raw tool number into tool and wear number
+        if tool_raw <100:
+            tool_raw=tool_raw*100
+        tool = int(tool_raw/100)
+        wear = 10000 + tool_raw % 100
+
+        # uncomment for debugging
+        print('***tool#',cblock.t_number,'toolraw:',tool_raw,'tool split:',tool,'wear split',wear)
+
+        if tool:
+            # check for tool number entry in tool file
+            (status, pocket) = self.find_tool_pocket(tool)
+            if status != INTERP_OK:
+                self.set_errormsg("T%d: tool entry not found" % (tool))
+                yield status
+        else:
+            tool = -1
+            pocket = -1
+            wear = -1
+        self.params["tool"] = tool
+        self.params["pocket"] = pocket
+        self.params["wear"] =  wear
+        try:
+            self.hal_tool_comp['tool']= tool_raw
+            self.hal_tool_comp['wear']= wear
+        except:
+            pass
+        # index tool immediately to tool number
+        self.selected_tool = int(self.params["tool"])
+        self.selected_pocket = int(self.params["pocket"])
+        emccanon.SELECT_TOOL(self.selected_tool)
+        if self.selected_pocket < 0:
+            self.set_errormsg("T0 not valid")
+            yield INTERP_ERROR
+        if self.cutter_comp_side:
+            self.set_errormsg("Cannot change tools with cutter radius compensation on")
+            yield INTERP_ERROR
+        self.params["tool_in_spindle"] = self.current_tool
+        self.params["selected_tool"] = self.selected_tool
+        self.params["current_pocket"] = self.current_pocket
+        self.params["selected_pocket"] = self.selected_pocket
+
+        # change tool
+        try:
+            self.selected_pocket =  int(self.params["selected_pocket"])
+            emccanon.CHANGE_TOOL()
+            self.current_pocket = self.selected_pocket
+            self.selected_pocket = -1
+            self.selected_tool = -1
+            # cause a sync()
+            self.set_tool_parameters()
+            self.toolchange_flag = True
+        except:
+            self.set_errormsg("T change aborted (return code %.1f)" % (self.return_value))
+            yield INTERP_ERROR
+
+        # if the tool offset/wear offset is specified, apply it
+        try:
+            if wear>10000:
+                self.execute("g43 h%d"% tool)
+                self.execute("g43.2 h%d"% wear)
+            yield INTERP_OK
+        
+        except:
+            self.set_errormsg("Tool change aborted - No wear %d entry found in tool table" %wear)
+            yield INTERP_ERROR
+    except:
+        self.set_errormsg("Tool change aborted (return code %.1f)" % (self.return_value))
+        yield INTERP_ERROR
 
 ########################################################################
 # Harmonic Spindle Speed Control

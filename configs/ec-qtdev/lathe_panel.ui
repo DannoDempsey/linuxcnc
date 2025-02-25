@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QFrame" name="frame">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QFrame" name="frame_2">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="Dial" name="mpg_dial">
+          <property name="geometry">
+           <rect>
+            <x>70</x>
+            <y>60</y>
+            <width>100</width>
+            <height>100</height>
+           </rect>
+          </property>
+          <property name="wrapping">
+           <bool>true</bool>
+          </property>
+          <property name="notchesVisible">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_3">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="PushButton" name="pushbutton">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>70</y>
+            <width>66</width>
+            <height>33</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="PushButton" name="pushbutton_2">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>140</y>
+            <width>66</width>
+            <height>33</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="PushButton" name="pushbutton_3">
+          <property name="geometry">
+           <rect>
+            <x>80</x>
+            <y>240</y>
+            <width>66</width>
+            <height>33</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="RoundButton" name="Roundbutton">
+          <property name="geometry">
+           <rect>
+            <x>90</x>
+            <y>350</y>
+            <width>100</width>
+            <height>100</height>
+           </rect>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>100</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>ESTOP</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="pin_name" stdset="0">
+           <string>estop</string>
+          </property>
+          <property name="indicator_option" stdset="0">
+           <bool>true</bool>
+          </property>
+          <property name="shape_option" stdset="0">
+           <number>0</number>
+          </property>
+          <property name="off_color" stdset="0">
+           <color>
+            <red>50</red>
+            <green>205</green>
+            <blue>50</blue>
+           </color>
+          </property>
+         </widget>
+         <widget class="Line" name="line">
+          <property name="geometry">
+           <rect>
+            <x>60</x>
+            <y>310</y>
+            <width>118</width>
+            <height>3</height>
+           </rect>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_4">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="1" column="0">
+           <widget class="LED" name="led_turret_lsw_2">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="LED" name="led_turret_lsw_3">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="LED" name="led_turret_lsw_7">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="LED" name="led_turret_lsw_8">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="LED" name="led_turret_lsw_1">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="LED" name="led_turret_lsw_5">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="19" column="0">
+           <widget class="LED" name="led_turret_lsw_12">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="LED" name="led_turret_lsw_6">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="16" column="1" colspan="2">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="2">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="LED" name="led_turret_lsw_4">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="19" column="1" colspan="2">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="18" column="0">
+           <widget class="LED" name="led_turret_lsw_11">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="17" column="1">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+          <item row="16" column="0">
+           <widget class="LED" name="led_turret_lsw_9">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="17" column="0">
+           <widget class="LED" name="led_turret_lsw_10">
+            <property name="pin_name" stdset="0">
+             <string>turret_lsw_1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="18" column="1">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>TextLabel</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>30</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IndicatedPushButton</class>
+   <extends>QPushButton</extends>
+   <header>qtvcp.widgets.simple_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>PushButton</class>
+   <extends>QPushButton</extends>
+   <header>qtvcp.widgets.simple_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>Dial</class>
+   <extends>QDial</extends>
+   <header>qtvcp.widgets.simple_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>LED</class>
+   <extends>QWidget</extends>
+   <header>qtvcp.widgets.led_widget</header>
+  </customwidget>
+  <customwidget>
+   <class>ActionButton</class>
+   <extends>IndicatedPushButton</extends>
+   <header>qtvcp.widgets.action_button</header>
+  </customwidget>
+  <customwidget>
+   <class>RoundButton</class>
+   <extends>ActionButton</extends>
+   <header>qtvcp.widgets.action_button_round</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

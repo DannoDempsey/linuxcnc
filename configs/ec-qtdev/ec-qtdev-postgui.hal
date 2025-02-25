@@ -1,0 +1,2 @@
+# Postgui.hal file for ec-qtdev lathe
+loadusr -Wn lathe_panel qtvcp lathe_panel

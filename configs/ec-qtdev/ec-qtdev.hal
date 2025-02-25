@@ -6,7 +6,7 @@
 #
 ########################################################################
 # user space components
-loadusr -W hal_manualtoolchange
+#loadusr -W hal_manualtoolchange
 #loadusr -W lcec_conf /home/daniel/linuxcnc/configs/ec-sim/ec-test.xml
 #loadrt lcec
 # components
@@ -59,10 +59,10 @@ net spindle-rpm-filtered spindle_mass.out => near_speed.in2
 net spindle-speed-cmd spindle.0.speed-out => limit_speed.in near_speed.in1
 net spindle-speed-limited limit_speed.out => sim_spindle.velocity-cmd spindle_mass.in
 # Tool Change Ok for now
-net tool:change iocontrol.0.tool-change => hal_manualtoolchange.change
-net tool:changed hal_manualtoolchange.changed => iocontrol.0.tool-changed
-net tool:prep-loop iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
-net tool:prep-number iocontrol.0.tool-prep-number => hal_manualtoolchange.number
+#net tool:change iocontrol.0.tool-change => hal_manualtoolchange.change
+#net tool:changed hal_manualtoolchange.changed => iocontrol.0.tool-changed
+#net tool:prep-loop iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
+#net tool:prep-number iocontrol.0.tool-prep-number => hal_manualtoolchange.number
 # parameter values
 setp J0_accel.tmax                  0
 setp J0_mux.tmax                    0

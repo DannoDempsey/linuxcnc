@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>600</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QFrame" name="frame">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QFrame" name="frame_2">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="0" column="0">
+           <widget class="LED" name="led">
+            <property name="pin_name" stdset="0">
+             <string>led_mpg_active</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="Dial" name="mpg_dial">
+            <property name="wrapping">
+             <bool>true</bool>
+            </property>
+            <property name="notchesVisible">
+             <bool>true</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>mpg</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_3">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="PushButton" name="pgm_run"/>
+          </item>
+          <item>
+           <widget class="PushButton" name="pgm_pause"/>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>247</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="PushButton" name="override_limits"/>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="RoundButton" name="Roundbutton">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>ESTOP</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>estop</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>0</number>
+            </property>
+            <property name="off_color" stdset="0">
+             <color>
+              <red>50</red>
+              <green>205</green>
+              <blue>50</blue>
+             </color>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_4">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="PushButton" name="btn_lsw_1">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="default">
+             <bool>true</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_1</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="PushButton" name="btn_lsw_2">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_2</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="PushButton" name="btn_lsw_3">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_3</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="PushButton" name="btn_lsw_4">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_4</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="PushButton" name="btn_lsw_5">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_5</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="PushButton" name="btn_lsw_6">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_6</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="PushButton" name="btn_lsw_7">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_7</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="PushButton" name="btn_lsw_8">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_8</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="PushButton" name="btn_lsw_9">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_9</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="PushButton" name="btn_lsw_11">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_odd</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="PushButton" name="btn_lsw_12">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_even</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="0">
+           <widget class="PushButton" name="btn_lsw_13">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_unclamp</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="PushButton" name="btn_lsw_10">
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="pin_name" stdset="0">
+             <string>lsw_10</string>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>30</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>IndicatedPushButton</class>
+   <extends>QPushButton</extends>
+   <header>qtvcp.widgets.simple_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>PushButton</class>
+   <extends>QPushButton</extends>
+   <header>qtvcp.widgets.simple_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>Dial</class>
+   <extends>QDial</extends>
+   <header>qtvcp.widgets.simple_widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>LED</class>
+   <extends>QWidget</extends>
+   <header>qtvcp.widgets.led_widget</header>
+  </customwidget>
+  <customwidget>
+   <class>ActionButton</class>
+   <extends>IndicatedPushButton</extends>
+   <header>qtvcp.widgets.action_button</header>
+  </customwidget>
+  <customwidget>
+   <class>RoundButton</class>
+   <extends>ActionButton</extends>
+   <header>qtvcp.widgets.action_button_round</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

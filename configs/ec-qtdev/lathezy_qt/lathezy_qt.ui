@@ -254,14 +254,14 @@
              <item>
               <widget class="StatusStacked" name="statusstacked_main">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
+                 <width>420</width>
                  <height>0</height>
                 </size>
                </property>
@@ -1386,7 +1386,7 @@ FROM LINE</string>
              <item>
               <widget class="QTabWidget" name="tabWidget_2">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>

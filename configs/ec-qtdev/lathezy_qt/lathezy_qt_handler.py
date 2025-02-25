@@ -42,10 +42,6 @@ INFO = Info()
 TOOL = Tool()
 TOOLBAR = ToolBarActions()
 STYLEEDITOR = SSE()
-#GSTAT = GStat()
-#GCODES = GCodes()
-#DRO = Dro()
-
 
 # Types for add status message
 DEFAULT = 0
@@ -88,7 +84,7 @@ class HandlerClass:
         self.jog_inc_z = 0
         self.jog_inc = 0
         self.active_joint = 0
-        self.active_jog_flag = 0
+        self.jog_flag = 0
         
         # Lathe DRO variables
         self.css_mode = 0
@@ -189,18 +185,18 @@ class HandlerClass:
     # Define any new pins here
     def init_pins(self):
         # Jog enable pins
-        pin = self.hal.newpin("joint0_jog_enable_out", hal.HAL_BIT, hal.HAL_OUT)
-        pin = self.hal.newpin("joint1_jog_enable_out", hal.HAL_BIT, hal.HAL_OUT)
+        pin = self.hal.newpin("joint0-jog-enable", hal.HAL_BIT, hal.HAL_OUT)
+        pin = self.hal.newpin("joint1-jog-enable", hal.HAL_BIT, hal.HAL_OUT)
         
         # Jog increment pins
-        pin = self.hal.newpin("joint0_jog_inc_out", hal.HAL_FLOAT, hal.HAL_OUT)
-        pin = self.hal.newpin("joint1_jog_inc_out", hal.HAL_FLOAT, hal.HAL_OUT)
+        pin = self.hal.newpin("joint0-jog-inc", hal.HAL_FLOAT, hal.HAL_OUT)
+        pin = self.hal.newpin("joint1-jog-inc", hal.HAL_FLOAT, hal.HAL_OUT)
         
-        # MPG pins
-        pin = self.hal.newpin("mpg_active", hal.HAL_BIT, hal.HAL_OUT)
+        # MPG pin for physical led beside MPG wheel
+        pin = self.hal.newpin("mpg", hal.HAL_BIT, hal.HAL_OUT)
         
         # Turret Unclamp pin
-        #pin = self.hal.newpin("unclamp_turret", hal.HAL_BIT, hal.HAL_OUT)
+        pin = self.hal.newpin("unclamp-turret", hal.HAL_BIT, hal.HAL_OUT)
 
     # Set widget preferences here
     def init_preferences(self):
@@ -210,8 +206,6 @@ class HandlerClass:
     def init_widgets(self):
         # Hide columns in the tool offsets view widget 
         self.w.tool_offsetview.hideColumn(2) # Pocket
-        self.w.tool_offsetview.hideColumn(4) # X Wear
-        self.w.tool_offsetview.hideColumn(8) # Z Wear
         #self.resize_columns()
         
         # Hide the Gcode editor top and bottom Menus so that we can use our 
@@ -222,8 +216,12 @@ class HandlerClass:
         # Hide the run from line frame
         self.w.frame_run_from.hide()
 
+        # Set the runtime clock
         self.w.lbl_runtime.setText("00:00:00")
-    
+
+        #Set the x-axis as the default axis to jog
+        self.w.btn_select_x_axis.setChecked(True)
+        
 
     # Special Function: Lathe Jog Increments
     # Populate the increments combobox with the increments specified 
@@ -399,32 +397,32 @@ class HandlerClass:
                 # Z axis increment
                 self.jog_inc = increment_selected
                 self.jog_inc_z = self.jog_inc
-                self.hal['joint1_jog_inc_out'] = self.jog_inc_z
+                self.hal['joint1-jog-inc'] = self.jog_inc_z
                 
                 # X axis increment
                 if self.is_diameter_mode:
                     self.jog_inc_x = self.jog_inc / 2.0
-                    self.hal['joint0_jog_inc_out'] = self.jog_inc_x
+                    self.hal['joint0-jog-inc'] = self.jog_inc_x
                     print ("Increments adjused for diameter mode")
                 else:
                     self.jog_inc_x = self.jog_inc
-                    self.hal['joint0_jog_inc_out'] = self.jog_inc_x
+                    self.hal['joint0-jog-inc'] = self.jog_inc_x
                     
             # Set the increments G20 
             else:
                 # Z axis increment
                 self.jog_inc = increment_selected * 25.4
                 self.jog_inc_z = self.jog_inc
-                self.hal['joint1_jog_inc_out'] = self.jog_inc_z
+                self.hal['joint1-jog-inc'] = self.jog_inc_z
                 
                 # X axis increment
                 if self.is_diameter_mode:
                     self.jog_inc_x = self.jog_inc / 2.0
-                    self.hal['joint0_jog_inc_out'] = self.jog_inc_x
+                    self.hal['joint0-jog-inc'] = self.jog_inc_x
                     print ("Increments adjused for diameter mode")
                 else:
                     self.jog_inc_x = self.jog_inc
-                    self.hal['joint0_jog_inc_out'] = self.jog_inc_x
+                    self.hal['joint0-jog-inc'] = self.jog_inc_x
                     
         print("Jog increments set: X-axis = %.4fmm, Z-axis = %.4fmm" % (self.jog_inc_x, self.jog_inc))
     
@@ -432,10 +430,12 @@ class HandlerClass:
     def on_btn_jog_enable_toggled(self, checked):
         if checked:
             ACTION.SET_MOTION_TELEOP(1)
+            self.jog_flag = 1 
         else:
             ACTION.SET_MOTION_TELEOP(0)
+            self.jog_flag = 0
 
-    # Method to select the joint we want to KB jog (uses radio buttons).
+    # Method to select the joint we want to MPG jog (uses radio buttons).
     def on_btn_select_x_axis_toggled(self,checked):
         self.active_joint = 0
         ACTION.SET_SELECTED_JOINT(0)
@@ -443,10 +443,6 @@ class HandlerClass:
     def on_btn_select_z_axis_toggled(self,checked):
         self.active_joint = 1
         ACTION.SET_SELECTED_JOINT(1) 
-
-    # Method for KB(Hand Wheel) Jogging
-    def kb_jog(self):
-        pass
 
     # Method for continuous jogging
     def continuious_jog(self, axis, direction):
@@ -589,13 +585,35 @@ class HandlerClass:
         self.update_metric_mode()
         self.update_diameter_mode()
         self.update_run_timer()
+        self.update_mpg()
+
+    def update_mpg(self):
+        if STATUS.is_man_mode():
+            if self.jog_flag and self.jog_inc != 0:
+                # Turn on the LED
+                self.hal['mpg'] = True
+                # Enable the joint selected by the radio buttons
+                if self.active_joint == 0:
+                    self.hal['joint0-jog-enable'] = True
+                    self.hal['joint1-jog-enable'] = False
+                
+                if self.active_joint == 1:
+                    self.hal['joint0-jog-enable'] = False
+                    self.hal['joint1-jog-enable'] = True
+            else:
+                self.hal['mpg'] = False
+                self.hal['joint0-jog-enable'] = False
+                self.hal['joint1-jog-enable'] = False
+
+        else:
+            # Do nothing
+            pass
+        
 
     # Program Run Timer
     # Method to track the state of STATUS.is_auto_running and start/stop the timer
     def update_run_timer(self):
-        
         current_state = STATUS.is_auto_running()
-
         # If the program is paused, do nothing
         if STATUS.is_auto_paused():
             return
@@ -662,11 +680,12 @@ class HandlerClass:
         self.request_tool_num =  index + 1
         
         # Debug
-        print("Requested Tool: %d \n" % self.request_tool_num)
+        #print("Requested Tool: %d \n" % self.request_tool_num)
 
+    # If we are manually requesting a tool we don't want to apply the offsets 
     def on_btn_index_tool_clicked(self):
         current_tool = TOOL.current_tool_num
-        request_tool = self.request_tool_num
+        request_tool = self.request_tool_num * 100
 
         # Debug
         print ("Current Tool # %d \n" % current_tool)
@@ -680,8 +699,12 @@ class HandlerClass:
                     # Debug
                     print ("Stopping Spindle")
                     ACTION.CALL_MDI("M5")
+                
+                # Cancel any offsets that maybe active
+                ACTION.CALL_MDI("G49")
+                
                 # Call the tool change
-                ACTION.CALL_MDI("M6 T%d" % self.request_tool_num)
+                ACTION.CALL_MDI("M6 T%d" % request_tool) # Call Tool Change 
         
             else:
                 # Throw up an error dialog 
@@ -807,18 +830,21 @@ class HandlerClass:
     ###########################################################################
 
     def on_btn_tool_add_clicked(self):
-        TOOL.ADD_TOOL()
-          
-    def on_btn_tool_delete_clicked(self):
-        # Delete checked tools 
+        #self.w.tool_offsetview.add_lathe_tool()
+        self.w.tool_offsetview.add_tool()
+
+    def on_btn_tool_delete_clicked(self): 
         self.w.tool_offsetview.delete_tools()
                 
     def on_btn_tool_save_clicked(self):
-        TOOL.SAVE_TOOLFILE()
-        TOOL.emit_update()
+        self.w.tool_offsetview.save_tool_file()
+        
     
     # Method to show only the tool number, and X and Z wear offset columns when
     # checked 
+    def on_btn_show_wear_offsets_toggled(self, checked):
+        pass
+    """
     def on_btn_show_wear_offsets_toggled(self, checked):
         # Hide the columns we don't want to see
         if checked:
@@ -850,7 +876,8 @@ class HandlerClass:
             self.w.tool_offsetview.hideColumn(8)
             #self.w.tool_offsetview.showColumn(19)
             #self.resize_columns()
-        
+"""
+
     def resize_columns(self):
             # Set the column width
             #self.w.tool_offsetview.setColumnWidth(1, 50)
@@ -900,7 +927,16 @@ class HandlerClass:
                 }
         ACTION.CALL_DIALOG(mess)
 
-        
+    ###########################################################################
+    # Turret/Tool Tab
+    ###########################################################################
+    #TODO: Currently unable to update the table to filter out rows 
+    def on_btn_show_wear_offsets_toggled(self,state):
+        if state:
+            print("Showing wear offsets")
+        else:
+            print("Hiding Wear Offsets")
+
         
     #####################
     # general functions #
