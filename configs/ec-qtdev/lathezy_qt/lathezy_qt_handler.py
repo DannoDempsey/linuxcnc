@@ -108,10 +108,10 @@ class HandlerClass:
         self.min_spindle_rpm = INFO.MIN_SPINDLE_SPEED
         self.max_spindle_rpm = INFO.MAX_SPINDLE_SPEED
 
-        # Variables for pan and zoom distance
-        #self._pan_inc = 0
-        #self.lr_pan_inc = 0
-        
+        # Variables for physical buttons
+        self.user_pgm_run = 0
+        self.user_pgm_pause = 0
+        self.user_ext_step = 0 
         
         # Variables for run time clock
         self.run_time = 0
@@ -129,7 +129,10 @@ class HandlerClass:
         
         # Connect status to return value/messages from various dialogs
         STATUS.connect('general', self.return_value)
-        
+
+        # Connect Status to sensitize the program step button.
+        STATUS.connect('program-pause-changed', lambda w, state: self.sensitize_pgm_step(state))
+     
     def class_patch__(self): 
         self.gcode_editor_patch()
 
@@ -148,7 +151,7 @@ class HandlerClass:
         self.init_turret_tools()
         self.class_patch__()
         # Uncomment to print out a list of available qtvcp objects
-        # self.init_library()
+        #self.init_library()
         
     #############################
     # SPECIAL FUNCTIONS SECTION #
@@ -198,6 +201,20 @@ class HandlerClass:
         # Turret Unclamp pin
         pin = self.hal.newpin("unclamp-turret", hal.HAL_BIT, hal.HAL_OUT)
 
+        # Create pins for physical button inputs and connect them to our custom
+        # methods.
+        pin = self.hal.newpin("pgm-run-in", hal.HAL_BIT, hal.HAL_IN)
+        pin.value_changed.connect(self.on_ext_pgm_run_changed)
+
+        pin = self.hal.newpin("pgm-pause-in", hal.HAL_BIT, hal.HAL_IN)
+        pin.value_changed.connect(self.on_ext_pgm_pause_changed)
+
+        # Create pins to monitor the gear position
+        pin = self.hal.newpin("gear-low", hal.HAL_BIT, hal.HAL_IN)
+        pin = self.hal.newpin("gear-high", hal.HAL_BIT, hal.HAL_IN)
+        pin = self.hal.newpin("gear-neutal", hal.HAL_BIT, hal.HAL_IN)
+
+
     # Set widget preferences here
     def init_preferences(self):
         pass
@@ -206,8 +223,7 @@ class HandlerClass:
     def init_widgets(self):
         # Hide columns in the tool offsets view widget 
         self.w.tool_offsetview.hideColumn(2) # Pocket
-        #self.resize_columns()
-        
+
         # Hide the Gcode editor top and bottom Menus so that we can use our 
         # own buttons
         self.w.gcode_editor.topMenu.hide()
@@ -222,6 +238,11 @@ class HandlerClass:
         #Set the x-axis as the default axis to jog
         self.w.btn_select_x_axis.setChecked(True)
         
+        # Retrieve the current S code 
+        self.update_scode_lbl()
+
+        # Set the inital state of the program buttons
+        self.w.btn_pgm_pause.setChecked(False)
 
     # Special Function: Lathe Jog Increments
     # Populate the increments combobox with the increments specified 
@@ -521,10 +542,6 @@ class HandlerClass:
         # Cancel tool length compensation
         ACTION.CALL_MDI('G49')
 
-
-
-
-
     ########################################################################
     # CALLBACKS FROM STATUS, DIALOG RETURN #
     ########################################################################
@@ -552,6 +569,7 @@ class HandlerClass:
             print('Entry return value from {} dialog = {}'.format(set_rpm, abs(int((num))))) 
             rpm = abs(int(num))
             ACTION.CALL_MDI("G97 S%d" % rpm)
+            ACTION.SET_MANUAL_MODE()
 
         if get_line and name =='ENTRY' and not num is None:
             print('Entry return value from {} dialog = {}'.format(get_line, abs(int((num)))))
@@ -576,6 +594,62 @@ class HandlerClass:
     def add_status(self, message, alertLevel = DEFAULT, noLog = False):
         STATUS.emit('update-machine-log', message, 'TIME')
 
+    # Method to combine the physical buttons pgm run/step and pgm pause
+    # with the gui's buttons.
+
+    def on_btn_pgm_step_clicked(self):
+        ACTION.STEP()
+
+    def on_btn_pgm_run_clicked(self):
+        ACTION.RUN()
+    
+    def on_btn_pgm_pause_toggled(self,state):
+        if state:
+            ACTION.PAUSE()
+        else:
+            ACTION.RESUME()
+
+    def on_btn_pgm_stop_clicked(self):
+        ACTION.ABORT()
+        self.w.btn_pgm_pause.setChecked(False)
+
+    # ACTION buttons don't seem to sensitize correctly when the interpreter 
+    # transitions from paused => resume. Step button should only be shown 
+    # when the interpreter is paused.
+    def sensitize_pgm_step(self, state):
+        #print("sensitizing btn_pgm_step", state)
+        if state:
+            self.w.btn_pgm_step.setEnabled(True)
+        else:
+            self.w.btn_pgm_step.setEnabled(False)
+    
+    # Run button is only shown when the interp is idle, depending on what 
+    # state the the interp is in will determine the functionality of the 
+    # physical run button. 
+    def on_ext_pgm_run_changed(self,state):
+        if STATUS.is_auto_mode:
+            if STATUS.is_interp_idle and state:
+                self.on_btn_pgm_run_clicked()
+            
+            elif STATUS.is_interp_paused() and state:
+                self.on_btn_pgm_step_clicked()
+            else:
+                # Do Nothing if the interp is not in one of these two states
+                pass
+        else:
+            # Do nothing if we're not in auto mode
+            pass
+    
+    # Toggle the button from False => True or from True => False when the 
+    # external button is pressed, i.e. flip flop on ext button press only
+    def on_ext_pgm_pause_changed(self,state):
+        if STATUS.is_auto_running and state:
+            new_state = not self.w.btn_pgm_pause.isChecked()
+            self.w.btn_pgm_pause.setChecked(new_state)
+        else:
+            # Do nothing 
+            pass
+
     ###########################################################################
     # PERIODIC UPDATES
     # #########################################################################        
@@ -586,6 +660,13 @@ class HandlerClass:
         self.update_diameter_mode()
         self.update_run_timer()
         self.update_mpg()
+        self.update_scode_lbl()
+
+    def update_scode_lbl(self):
+        scode = int(STATUS.stat.settings[2])
+        #print(f"Commanded Spindle Speed: {scode}")
+        self.w.lbl_scode.setText(str(scode))
+        
 
     def update_mpg(self):
         if STATUS.is_man_mode():
@@ -653,12 +734,22 @@ class HandlerClass:
     ###########################################################################
     # PROGRAM OPTIONS 
     ###########################################################################
+    def on_btn_optional_stop_toggled(self, state):
+        if state:
+            ACTION.SET_OPTIONAL_STOP_ON()
+        else:
+            ACTION.SET_OPTIONAL_STOP_OFF()
+    
+    def on_btn_block_delete_toggled(self, state):
+        if state:
+            ACTION.SET_BLOCK_DELETE_ON()
+        else:
+            ACTION.SET_BLOCK_DELETE_OFF()
+
     # Convienece button to set the feed rate override and rapid override to 
     # 10%. Spindle override set to 50% 
     def on_btn_dry_run_toggled(self, state):
         if state:
-            data = INFO.MIN_SPINDLE_OVERRIDE
-            #print ("MIN SPINDLE OVERRIDE =%s" % data)
             ACTION.SET_SPINDLE_RATE(50)
             ACTION.SET_RAPID_RATE(10)
             ACTION.SET_FEED_RATE(10)
@@ -668,6 +759,33 @@ class HandlerClass:
             ACTION.SET_RAPID_RATE(100)
             ACTION.SET_FEED_RATE(100)
 
+    ###########################################################################
+    # Manual Spindle Buttons
+    ###########################################################################
+    # Ideally we would check if the spindle is in gear but, for now just get 
+    # things working
+
+    def on_btn_spindle_fwd_clicked(self):
+        if not STATUS.is_spindle_on():
+            ACTION.CALL_MDI("M03")
+            ACTION.SET_MANUAL_MODE()
+        else:
+            print("Spindle is already running. Stop Spindle before Changing Direction")
+    
+    def on_btn_spindle_rev_clicked(self):
+        if not STATUS.is_spindle_on():
+            ACTION.CALL_MDI("M04")
+            ACTION.SET_MANUAL_MODE()
+        else:
+            print("Spindle is already running. Stop Spindle before Changing Direction")
+    
+    def on_btn_spindle_stop_clicked(self):
+        if STATUS.is_spindle_on():
+            ACTION.CALL_MDI("M05")
+            ACTION.SET_MANUAL_MODE()
+        else:
+            # Do nothing
+            pass
 
     #######################################################################
     # Turrret/Tool Section 

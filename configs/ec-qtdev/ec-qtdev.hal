@@ -27,8 +27,10 @@ loadrt near names=near_speed
 #loadrt encoder num_chan=1
 
 # classic ladder
-#loadrt classicladder_rt numBits=10 numCounters=10 numTimersIec=20 numPhysInputs=200 numPhysOutputs=200
-#loadusr classicladder /home/daniel/linuxcnc/configs/ec-sim-ladder.clp
+loadrt classicladder_rt numBits=10 numCounters=10 numTimersIec=20 numPhysInputs=200 numPhysOutputs=200
+addf classicladder.0.refresh servo-thread
+# Load the mazak classic ladder file 
+# loadusr classicladder /home/daniel/dev/linuxcnc-dev/configs/ec-qtdev/SlantTurn-1500.clp
 
 # pin aliases
 # param aliases

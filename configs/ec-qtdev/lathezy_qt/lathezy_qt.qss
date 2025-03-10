@@ -1,7 +1,13 @@
+
+QMainWindow {
+  /*  background: url(/home/daniel/dev/linuxcnc-dev/configs/ec-qtdev/lathezy_qt/lathezy_qt-images/satin_metal.png); */
+}
+
 QFrame#frame_dro {
     background: black;
 }
 
+/* DRO */
 StateLabel#label_metric_mode,
 StateLabel#label_dia_mode,
 StateLabel#label_css_mode,
@@ -13,3 +19,161 @@ DROLabel#dro_z_rel,
 DROLabel#dro_z_dtg {
     color: #32CD32;
 }
+
+/* Jog Buttons */ 
+QPushButton#btn_jog_x_plus,
+QPushButton#btn_jog_x_minus,
+QPushButton#btn_jog_z_plus,
+QPushButton#btn_jog_z_minus {
+    background: black;
+    border-radius: 6;
+}
+
+QPushButton#btn_jog_x_plus:pressed,
+QPushButton#btn_jog_x_minus:pressed,
+QPushButton#btn_jog_z_plus:pressed,
+QPushButton#btn_jog_z_minus:pressed {
+    background-color: #C0C0C0;
+    border-radius: 6;
+}
+
+/* Main Display*/ 
+QGroupBox#groupBox_tailstock,
+QGroupBox#groupBox_status,
+QGroupBox#groupBox_overrides,
+QGroupBox#groupBox_spindle,
+QGroupBox#groupBox_manual_spindle,
+QGroupBox#groupBox_jog_controls,
+QGroupBox#groupBox_mode,
+QGroupBox#groupBox_program_options {
+    border: 3px solid #000000;  /* Thicker border */
+    border-radius: 10px;        /* Rounded corners */
+    margin-top: 12px;           /* Room for title */
+}
+
+QGroupBox#groupBox_tailstock::Title,
+QGroupBox#groupBox_status::Title,
+QGroupBox#groupBox_overrides::Title,
+QGroupBox#groupBox_spindle::Title,
+QGroupBox#groupBox_manual_spindle::Title,
+QGroupBox#groupBox_program_options::Title,
+QGroupBox#groupBox_jog_controls::Title,
+QGroupBox#groupBox_mode::Title {
+    subcontrol-origin: border;
+    subcontrol-position: top center;
+    padding: 0px 5px;       
+    position: relative;
+    top: -12px;                 /* Move title UP */
+}
+
+QFrame#frame_main,
+QFrame#frame_estop {
+    border: 3px solid #000000;
+    border-radius: 10px;
+}
+
+QFrame#frame_gcodes,
+QFrame#frame_mcodes,
+QFrame#frame_speed,
+QFrame#frame_tool {
+    background: white;
+}
+
+/* Style the background of the QTabWidget to match the MainWindow*/
+QTabWidget#tabWidget_main {
+    background: #d0d0d0;       
+}
+
+/* Style the bottom row of tabs */
+QTabWidget#tabWidget_main QTabBar::tab {
+    /*background: #505050;  */      /* Tab background */
+    /*color: white;         */      /* Text color */
+    border: 2px solid #000000;  /* Border around tabs */
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 6px 12px;          /* Space inside tabs */
+    margin-right: 2px;          /* Space between tabs */
+}
+
+/* Style the top row of tabs */
+QTabWidget#tabWidget_system QTabBar::tab {
+    border: 2px solid #000000;  /* Border around tabs */
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 6px 12px;          /* Space inside tabs */
+    margin-right: 2px;          /* Space between tabs */
+}
+
+/* Style the active (selected) tab */
+QTabWidget#tabWidget_main   QTabBar::tab:selected,
+QTabWidget#tabWidget_system QTabBar::tab:selected {
+    background: #C0C0C0;
+    color: black;
+    font-weight: bold;
+}
+
+/* Style the tab widget pages (the content inside the tabs) */
+/*
+QTabWidget#tabWidget_main QTabWidget::pane {
+    border: 3px solid #000000;  
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    padding: 10px;
+}
+*/
+
+/* Style the push buttons */
+QPushButton {
+    border: 1px solid #000000;
+    border-radius: 6px;
+    background-color: #EBEBEB; 
+}
+
+QPushButton:pressed {
+    background-color: #C0C0C0; 
+}
+
+QPushButton:checked {
+    background-color: #C0C0C0;
+}
+
+QPushButton:disabled {
+    color: white;
+}
+
+/* Style the ScrollBars*/
+QScrollBar:horizontal {
+    height: 30px;
+    background-color: #EBEBEB;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #2196F3;
+    border-radius: 4px;
+    margin: 0px 30px 0px 30px;
+}
+
+QScrollBar:vertical {
+    width: 30px;
+    background-color: #EBEBEB;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #2196F3;
+    border-radius: 4px;
+    margin: 30px 0px 30px 0px;
+}
+
+/* Style the adjustment sliders */
+QProgressBar{
+    background: white;
+    border: 1px #000000;
+    border-radius: 4px;
+}
+
+QProgressBar::chunk:horizontal {
+    background-color: #2196F3;
+}
+
