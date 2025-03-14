@@ -1,12 +1,12 @@
-VERSION = '008.056'
+VERSION = '008.058'
 LCNCVER = '2.10'
-DOCSVER = LCNCVER
+DOCSVER = 'devel'
 
 '''
 qtplasmac_handler.py
 
 Copyright (C) 2020-2024 Phillip A Carter
-Copyright (C) 2020-2024 Gregory D Carl
+Copyright (C) 2020-2025 Gregory D Carl
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
@@ -162,7 +162,7 @@ class HandlerClass:
         if os.path.basename(self.PATHS.XML) == 'qtplasmac_9x16.ui':
             self.landscape = False
         self.upFile = os.path.join(self.PATHS.CONFIGPATH, 'user_periodic.py')
-        self.umUrl = QUrl(f'http://linuxcnc.org/docs/{DOCSVER}/html/plasma/qtplasmac.html')
+        self.umUrl = f'https://linuxcnc.org/docs/{DOCSVER}/html/plasma/qtplasmac.html'
         KEYBIND.add_call('Key_F12', 'on_keycall_F12')
         KEYBIND.add_call('Key_F9', 'on_keycall_F9')
         KEYBIND.add_call('Key_Plus', 'on_keycall_PLUS')
@@ -505,7 +505,7 @@ class HandlerClass:
         self.qt5_graphics_patch()
         self.screen_options_patch()
 
-    # patched file manager functions
+# patched file manager functions
     def file_manager_patch(self):
         self.old_load = FILE_MAN.load
         FILE_MAN.load = self.new_load
@@ -1278,7 +1278,7 @@ class HandlerClass:
             for f in range(0, len(logFiles) - (numLogs - 1)):
                 os.remove(logFiles[0])
                 logFiles = logFiles[1:]
-        text = self.w.machinelog.toPlainText()
+        text = self.w.machinelog.getLogText()
         logName = f'{self.PATHS.CONFIGPATH}/{logPre}{time.strftime("%y-%m-%d_%H-%M-%S")}.txt'
         with open(logName, 'w') as f:
             f.write(text)
@@ -1631,8 +1631,10 @@ class HandlerClass:
             self.lastLoadedProgram = ''
             return
         if filename is not None:
+            if 'qtplasmac_file_clear.ngc' in filename:
+                self.fileClear = True
             self.overlayProgress.setValue(0)
-            if not any(name in filename for name in ['qtplasmac_program_clear', 'single_cut']):
+            if not any(name in filename for name in ['qtplasmac_file_clear.ngc', 'single_cut.ngc']):
                 self.lastLoadedProgram = filename
             if not self.cameraOn:
                 self.preview_index_return(self.w.preview_stack.currentIndex())
@@ -1687,7 +1689,7 @@ class HandlerClass:
         if self.w.main_tab_widget.currentIndex() != self.MAIN:
             self.w.main_tab_widget.setCurrentIndex(self.MAIN)
         # forces the view to remain "table view" if T is checked when a file is loaded, or change to table view upon clicking CLEAR
-        if self.w.view_t.isChecked() or 'qtplasmac_program_clear.ngc' in filename:
+        if self.w.view_t.isChecked() or 'qtplasmac_file_clear.ngc' in filename:
             self.view_t_pressed(self.w.gcodegraphics)
         if 'single_cut.ngc' not in filename:
             self.preSingleCutMaterial = None
@@ -2240,10 +2242,9 @@ class HandlerClass:
             self.button_normal(self.ctButton)
             self.w[self.ctButton].setText(self.cutTypeText)
         if self.fileOpened:
-            self.fileClear = True
             if self.rflActive:
                 self.clear_rfl()
-            clearFile = f'{self.tmpPath}qtplasmac_program_clear.ngc'
+            clearFile = f'{self.tmpPath}qtplasmac_file_clear.ngc'
             with open(clearFile, 'w') as outFile:
                 outFile.write('m2')
             if ACTION.prefilter_path:
@@ -2344,8 +2345,8 @@ class HandlerClass:
             self.autorepeat_keys(True)
         elif tab == self.STATISTICS:
             self.vkb_hide()
-            self.w.machinelog.moveCursor(QTextCursor.End)
-            self.w.machinelog.setCursorWidth(0)
+            self.w.machinelog.scrollToBottom()
+            self.w.machinelog.hideCursor()
             self.error_status(False)
 
     def z_height_changed(self, value):
@@ -2481,7 +2482,7 @@ class HandlerClass:
         self.w.webview.forward()
 
     def web_reload_pressed(self):
-        self.w.webview.load(self.umUrl)
+        self.w.webview.load(QUrl(self.umUrl))
 
 #########################################################################################################################
 # GENERAL FUNCTIONS #
@@ -3186,6 +3187,7 @@ class HandlerClass:
         self.w.webview_back.pressed.connect(self.web_back_pressed)
         self.w.webview_forward.pressed.connect(self.web_forward_pressed)
         self.w.webview_reload.pressed.connect(self.web_reload_pressed)
+        self.w.webview.page().loadFinished.connect(self.style_user_manual)
 
     def conv_call(self, operation):
         if self.developmentPin.get():
@@ -4236,7 +4238,7 @@ class HandlerClass:
             elif code == 'user-manual':
                 self.umButton = f'button_{str(bNum)}'
                 self.idleList.append(self.umButton)
-                self.w.webview.load(self.umUrl)
+                self.w.webview.load(QUrl(self.umUrl))
             elif code == 'toggle-joint':
                 self.jtButton = f'button_{str(bNum)}'
                 self.idleHomedList.append(self.jtButton)
@@ -4288,20 +4290,28 @@ class HandlerClass:
                         break
 
     def user_button_down(self, bNum):
-        commands = self.iniButtonCodes[bNum]
-        if not commands:
+        bCode = self.iniButtonCodes[bNum]
+        if not bCode:
             return
-        if 'change-consumables' in commands.lower() and 'e-halpin' not in commands.lower():
+        # toggle-laser is the only code that can appear anywhere in the button code
+        if 'toggle-laser' in bCode.lower():
+            self.laserOnPin.set(not self.laserOnPin.get())
+            for command in bCode.split('\\'):
+                command = command.strip()
+                if command != 'toggle-laser':
+                    self.user_button_command(bNum, command)
+            ACTION.SET_MANUAL_MODE()
+        elif bCode.lower().startswith('change-consumables') and 'e-halpin' not in bCode.lower():
             self.change_consumables(True)
-        elif 'probe-test' in commands.lower() and 'e-halpin' not in commands.lower():
+        elif bCode.lower().startswith('probe-test') and 'e-halpin' not in bCode.lower():
             self.probe_test(True)
-        elif 'torch-pulse' in commands.lower() and 'e-halpin' not in commands.lower():
+        elif bCode.lower().startswith('torch-pulse') and 'e-halpin' not in bCode.lower():
             self.torch_pulse(True)
-        elif 'ohmic-test' in commands.lower() and 'e-halpin' not in commands.lower():
+        elif bCode.lower().startswith('ohmic-test') and 'e-halpin' not in bCode.lower():
             self.ohmic_test(True)
-        elif 'framing' in commands.lower():
+        elif bCode.lower().startswith('framing'):
             self.frame_job(True)
-        elif 'cut-type' in commands.lower():
+        elif bCode.lower().startswith('cut-type'):
             self.w.gcodegraphics.logger.clear()
             self.cutType ^= 1
             if self.cutType:
@@ -4316,13 +4326,13 @@ class HandlerClass:
             self.overlayProgress.setValue(0)
             if self.fileOpened:
                 self.file_reload_clicked()
-        elif 'load' in commands.lower():
-            lFile = f'{self.programPrefix}/{commands.split("load", 1)[1].strip()}'
+        elif bCode.lower().startswith('load'):
+            lFile = f'{self.programPrefix}/{bCode.split("load", 1)[1].strip()}'
             self.overlayProgress.setValue(0)
             self.remove_temp_materials()
             ACTION.OPEN_PROGRAM(lFile)
-        elif 'toggle-halpin' in commands.lower():
-            halpin = commands.lower().split('toggle-halpin')[1].split(' ')[1].strip()
+        elif bCode.lower().startswith('toggle-halpin'):
+            halpin = bCode.lower().split('toggle-halpin')[1].split(' ')[1].strip()
             try:
                 if halpin in self.halPulsePins and self.halPulsePins[halpin][3] > 0.05:
                     self.halPulsePins[halpin][3] = 0.0
@@ -4333,17 +4343,10 @@ class HandlerClass:
                 msg0 = _translate('HandlerClass', 'Invalid code for user button')
                 msg1 = _translate('HandlerClass', 'Failed to toggle HAL pin')
                 STATUS.emit('error', linuxcnc.OPERATOR_ERROR, f'{head,}:\n{msg0} #{bNum}\n{msg1}\n"{halpin}" {err}\n')
-        elif 'toggle-laser' in commands.lower():
-            self.laserOnPin.set(not self.laserOnPin.get())
-            for command in commands.split('\\'):
-                command = command.strip()
-                if command != 'toggle-laser':
-                    self.user_button_command(bNum, command)
-            ACTION.SET_MANUAL_MODE()
-        elif 'pulse-halpin' in commands.lower():
+        elif bCode.lower().startswith('pulse-halpin'):
             head = _translate('HandlerClass', 'HAL Pin Error')
             msg1 = _translate('HandlerClass', 'Failed to pulse HAL pin')
-            halpin = commands.lower().strip().split()[1]
+            halpin = bCode.lower().strip().split()[1]
             # halPulsePins format is: button name, pulse time, button text, remaining time, button number
             try:
                 if self.halPulsePins[halpin][3] > 0.05:
@@ -4356,19 +4359,19 @@ class HandlerClass:
             except:
                 msg0 = _translate('HandlerClass', 'Invalid code for user button')
                 STATUS.emit('error', linuxcnc.OPERATOR_ERROR, f'{head}:\n{msg0} #{bNum}\n{msg1} "{halpin}"\n')
-        elif 'single-cut' in commands.lower():
+        elif bCode.lower().startswith('single-cut'):
             self.single_cut()
-        elif 'manual-cut' in commands.lower():
+        elif bCode.lower().startswith('manual-cut'):
             self.manual_cut()
-        elif 'offsets-view' in commands.lower():
+        elif bCode.lower().startswith('offsets-view'):
             if self.w.preview_stack.currentIndex() != self.OFFSETS:
                 self.w.preview_stack.setCurrentIndex(self.OFFSETS)
             else:
                 self.preview_index_return(self.w.preview_stack.currentIndex())
-        elif 'latest-file' in commands.lower():
+        elif bCode.lower().startswith('latest-file'):
             try:
-                if len(commands.split()) == 2:
-                    dir = commands.split()[1]
+                if len(bCode.split()) == 2:
+                    dir = bCode.split()[1]
                 else:
                     dir = self.w.PREFS_.getpref('last_loaded_directory', '', str, 'BOOK_KEEPING')
                 files = glob.glob(f'{dir}/*.ngc')
@@ -4380,28 +4383,28 @@ class HandlerClass:
                 head = _translate('HandlerClass', 'File Error')
                 msg0 = _translate('HandlerClass', 'Cannot open latest file from user button')
                 STATUS.emit('error', linuxcnc.OPERATOR_ERROR, f'{head}:\n{msg0} #{bNum}\n')
-        elif 'user-manual' in commands.lower():
+        elif bCode.lower().startswith('user-manual'):
             if self.w.preview_stack.currentIndex() != self.USER_MANUAL:
                 self.prevPreviewIndex = self.w.preview_stack.currentIndex()
                 self.w.preview_stack.setCurrentIndex(self.USER_MANUAL)
             else:
                 self.w.preview_stack.setCurrentIndex(self.prevPreviewIndex)
                 self.prevPreviewIndex = self.USER_MANUAL
-        elif 'toggle-joint' in commands.lower():
+        elif bCode.lower().startswith('toggle-joint'):
             self.toggle_joint_mode()
         else:
             self.reloadRequired = False
-            if 'dual-code' in commands:
+            if bCode.lower().startswith('dual-code'):
                 # dualCodeButtons format is: code1 ;; label1 ;; code2 ;; label2 ;; checked
                 if self.w[f'button_{bNum}'].text() == self.dualCodeButtons[bNum][3]:
-                    commands = self.dualCodeButtons[bNum][0]
+                    bCode = self.dualCodeButtons[bNum][0]
                     self.w[f'button_{bNum}'].setText(self.dualCodeButtons[bNum][1])
                     self.w[f'button_{bNum}'].setChecked(True)
                 else:
-                    commands = self.dualCodeButtons[bNum][2]
+                    bCode = self.dualCodeButtons[bNum][2]
                     self.w[f'button_{bNum}'].setText(self.dualCodeButtons[bNum][3])
                     self.w[f'button_{bNum}'].setChecked(False)
-            for command in commands.split('\\'):
+            for command in bCode.split('\\'):
                 command = command.strip()
                 self.user_button_command(bNum, command)
                 if command[0] == "%":
@@ -6062,6 +6065,8 @@ class HandlerClass:
         self.w.gcode_editor.editor.setCaretForegroundColor(QColor(self.fore1Color))
         # gcode editor active line
         self.w.gcode_editor.editor.setCaretLineBackgroundColor(QColor(self.backColor))
+        # webview background
+        self.w.webview.page().setBackgroundColor(QColor(self.backColor))
 
     def standard_stylesheet(self):
         baseStyleFile = os.path.join(self.PATHS.SCREENDIR, self.PATHS.BASEPATH, 'qtplasmac.style')
@@ -6151,6 +6156,77 @@ class HandlerClass:
             self.w[item].setIcon(QIcon(self.image))
         elif type == 'image':
             self[item] = QPixmap(self.image)
+
+    def style_user_manual(self):
+        # There is a brief delay between the "loadFinished" signal and the versioning site's readiness for CSS changes
+        if 'qtplasmac/versions.html' in self.w.webview.url().toString():
+            delayTime = 150
+        else:
+            delayTime = 0
+        customStyling = f"""
+            setTimeout(function() {{
+                var style = document.createElement('style');
+                style.innerHTML = `
+                    /* Apply background color to elements */
+                    .caption, a, blockquote, body, figcaption, caption, code, div, div.content,
+                    h1, h2, h3, h4, h5, h6, table, td, th, pre, ol, ul {{
+                        background-color: {self.backColor} !important; }}
+
+                    /* Apply foreground color to elements */
+                    body, blockquote, caption, div, li, td, p {{
+                        color: {self.foreColor} !important; }}
+
+                    /* Apply highlight color to elements */
+                    .caption, a, code, div.title, dt, em, figcaption, h1, h2, h3, h4, h5, h6,
+                    span, strong, th, tt, ul {{
+                        color: {self.fore1Color} !important; }}
+
+                    /* Change table borders color and fix sizing */
+                    table {{
+                        border: 2px solid {self.foreColor} !important;
+                        border-collapse: collapse !important; }}
+
+                    /* Change table divider color and fix sizing */
+                    td, th {{
+                        border: 1px solid {self.foreColor} !important; }}
+
+                    /* Remove borders from these elements, or things look odd after the other styling */
+                    hr, div, div.content {{
+                        border: none !important; }}
+
+                    /* Apply highlight color to header underline */
+                    h1, h2, h3, h4, h5, h6 {{
+                        border-bottom: solid {self.fore1Color} !important; }}
+
+                    /* Some images have a transparent background, this makes them visible */
+                    img {{
+                        background-color: white !important; }}
+
+                    /* Apply alternate background color to highlighted sections (on section link click from TOC) */
+                    :target {{
+                        background: {self.back1Color} !important; }}
+
+                    /* The following change scroll bar to match GUI styling */
+                    ::-webkit-scrollbar {{
+                        width: 20px;
+                        height: 20px; }}
+
+                    ::-webkit-scrollbar-thumb {{
+                        background: {self.foreColor} !important;
+                        border-radius: 4px;
+                        min-height: 40px !important;
+                        min-width: 40px !important; }}
+
+                    ::-webkit-scrollbar-track {{
+                        background: {self.back1Color} !important;
+                        border-radius: 4px; }}
+
+                    ::-webkit-scrollbar-corner {{
+                        background: {self.backColor} !important; }}
+                `;
+                document.head.appendChild(style); }}, {delayTime});
+        """
+        self.w.webview.page().runJavaScript(customStyling)
 
 #########################################################################################################################
 # KEY BINDING CALLS #

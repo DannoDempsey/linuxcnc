@@ -56,27 +56,6 @@ class OperatorValue(QLineEdit):
         STATUS.connect('all-homed', lambda w: self.setEnabled(STATUS.machine_is_on()))
         STATUS.connect('general',self.return_value)
 
-    def getSpeedText(self):
-        text = str(self.text()).strip()
-        return text
-
-
-    def keyPressEvent(self, event):
-        super(OperatorValue, self).keyPressEvent(event)
-        if event.key() == Qt.Key_Up:
-            self.increase()
-        if event.key() == Qt.Key_Down:
-            self.decrease()
-
-    def increase(self):
-        LOG.debug('increase')
-        STATUS.emit('spindle-increase')
-
-    def decrease(self):
-        LOG.debug('decrease')
-        STATUS.emit('spindle-decrease')
-
-
 class OperatorValueLine(OperatorValue):
     def __init__(self, parent=None):
         super(OperatorValueLine, self).__init__(parent)
@@ -85,6 +64,7 @@ class OperatorValueLine(OperatorValue):
         self.soft_keyboard = False
         self.dialog_keyboard = False
         self.issue_mdi_on_submit = False
+        self.issue_mdi_on_return = False
         self.mdi_command_format = "M3 S{value}"
         self.pending_value = False
         self._input_panel_full = SoftInputWidget(self, 'default')
@@ -92,18 +72,13 @@ class OperatorValueLine(OperatorValue):
 
         self.returnPressed.connect(self.handleReturnKey)
 
-
     def handleReturnKey(self):
         self.setFocus()
         self.setCursorPosition(len(self.text())+1)
-        if self.issue_mdi_on_submit:
+        if self.issue_mdi_on_return:
             self.pending_value = False
             self._style_polish('isPendingValue', self.pending_value)
             self.submit(self.mdi_command_format)
-        else:
-            self.pending_value = True
-            self._style_polish('isPendingValue', self.pending_value)
-
 
     def submit(self, mdi_format):
         value = str(self.text()).strip()
@@ -147,7 +122,6 @@ class OperatorValueLine(OperatorValue):
                 self._style_polish('isPendingValue', self.pending_value)
 
             LOG.debug('message return:{}'.format (message))
-            STATUS.emit('update-machine-log', 'Set OperatorValue {}'.format(value), 'TIME')
 
     def issue_mdi(self):
         self.submit(self.mdi_command_format)
@@ -174,6 +148,15 @@ class OperatorValueLine(OperatorValue):
         self.issue_mdi_on_submit = False
 
     issue_mdi_on_submit_option = pyqtProperty(bool, get_issue_mdi_on_submit, set_issue_mdi_on_submit, reset_issue_mdi_on_submit)
+
+    def set_issue_mdi_on_return(self, data):
+            self.issue_mdi_on_return = data
+    def get_issue_mdi_on_return(self):
+        return self.issue_mdi_on_return
+    def reset_issue_mdi_on_return(self):
+        self.issue_mdi_on_return = False
+
+    issue_mdi_on_return_option = pyqtProperty(bool, get_issue_mdi_on_return, set_issue_mdi_on_return, reset_issue_mdi_on_return)
 
     def set_mdi_command_format(self, data):
         self.mdi_command_format = data
@@ -203,6 +186,15 @@ class OperatorValueLine(OperatorValue):
 
     dialog_keyboard_option = pyqtProperty(bool, get_dialog_keyboard, set_dialog_keyboard, reset_dialog_keyboard)
 
+    def set_dialog_code(self, data):
+            self.dialog_code = data
+    def get_dialog_code(self):
+            return self.dialog_code
+    def reset_dialog_code(self):
+            self.dialog_code = False
+
+    dialog_code_option = pyqtProperty(str, get_dialog_code, set_dialog_code, reset_dialog_code)
+    
     def set_pending_value(self, data):
         self.pending_value = data
     def get_pending_value(self):

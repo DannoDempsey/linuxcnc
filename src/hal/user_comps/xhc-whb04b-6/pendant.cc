@@ -541,6 +541,7 @@ FeedRotaryButton::FeedRotaryButton(const KeyCode& keyCode,
     mStepMode(stepMode),
     mIsPermitted(false),
     mStepSize(0),
+    mIsStepMode_5_10(false),
     mEventListener(listener)
 {
     (void)mEventListener;
@@ -567,6 +568,8 @@ FeedRotaryButton& FeedRotaryButton::operator=(const FeedRotaryButton& other)
 {
     RotaryButton::operator=(other);
     mStepMode = other.mStepMode;
+    mStepSize = other.mStepSize;
+    mEventListener = other.mEventListener;
     return *this;
 }
 // ----------------------------------------------------------------------
@@ -668,6 +671,7 @@ std::ostream& operator<<(std::ostream& os, const AxisRotaryButton& data)
 AxisRotaryButton& AxisRotaryButton::operator=(const AxisRotaryButton& other)
 {
     RotaryButton::operator=(other);
+    mEventListener = other.mEventListener;
     return *this;
 }
 // ----------------------------------------------------------------------
@@ -831,6 +835,8 @@ ButtonsState& ButtonsState::operator=(const ButtonsState& other)
     mCurrentMetaButton = other.mCurrentMetaButton;
     mAxisButton        = other.mAxisButton;
     mFeedButton        = other.mFeedButton;
+    mPreviousState     = other.mPreviousState;
+    mEventListener     = other.mEventListener;
     return *this;
 }
 // ----------------------------------------------------------------------

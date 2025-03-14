@@ -1424,7 +1424,7 @@ It is a comma separated list of keyword and data:
 [[sub:qtvcp:widgets:operatorvalueline]]
 === `OperatorValueLine` - Operator Value Line Entry Widget
 
-The operator enters values into this widget, which will be applied to a template and then optionally issued to the MDI either immediately or applied at a later time.  The widget supports the optional popup calculator or keyboard for touchscreen-friendly entry.
+The operator enters values into this widget, which will be applied to a template and then optionally issued to the MDI either immediately or applied at a later time.  The widget supports the optional popup calculator, keyboard, or tool chooser for touchscreen-friendly entry by setting the `dialog_keyboard_option`.  To change which type of dialog is presented, edit the `dialog_code_option`.
 
 image::images/qtvcp_operator_value.png["QtVCP OperatorValueLine",scale="25%"]
 
@@ -2642,11 +2642,54 @@ When using `STATUS` 's `request-dialog` function, the default launch name is *`T
 
 It is based on PyQt's _QDialog_.
 
+[[sub:qtvcp:widgets:toolchooserdialog]]
+=== `ToolChooserDialog` - Tool Chooser Dialog Widget
+
+.QtVCP `ToolChooserDialog`: Tool Chooser Dialog Widget
+image::images/qtvcp_toolChooser.png["QtVCP `ToolChooserDialog`: Tool Chooser Dialog Widget",scale="25%"]
+
+This widget allows the operator to select one of the tools defined in the tool table.  If a tool is selected and 'Apply' is pressed or the tool is double-clicked, the dialog will return the tool number selected.  This can be used in conjunction with the `OperatorValueLine` widget to create a tool change widget, for example.
+
+If there is an Focus Overlay widget present, it will signal it to display.
+
+When using `STATUS` 's `request-dialog` function, the default launch name is *`TOOLCHOOSER`*. 
+
+It is based on PyQt's _QDialog_.
+
+
 [[sub:qtvcp:widgets:machinelog]]
 === `MachineLog` - Machine Events Journal Display Widget
 
-//TODO MachineLog widget capture/example
-FIXME MachineLog documentation
+This widget displays various *log event messages* that have been output by the system during the current session.  This includes informational messages as well as errors.
+
+.QtVCP `MachineLog`: Machine Events Log in `machine_log` (plain) mode
+image::images/qtvcp_machinelog_plain.png["QtVCP `MachineLog`: Machine Log Widget",scale="25%"]
+
+
+.QtVCP `MachineLog`: Machine Events Log in `machine_log_severity` mode
+image::images/qtvcp_machinelog.png["QtVCP `MachineLog`: Machine Log Widget",scale="25%"]
+
+Two distinct types of logs may be displayed:
+
+- machine log (plain text or severity highlighted)
+- integrator log (plain text only)
+
+The type of log shown by the widget is controlled by the option properties of the widget.  By selecting `machine_log_option` or `integrator_log_option` the appropriate log will be displayed.  These options will display plain styled logs in a Qt `QTextEdit` widget.
+
+Additionally, there is a `machine_log_severity_option` property that may be chosen that will display the machine log in a variety of colors depending on the severity of the message, by using a `QTableWidget`.  The colors may be configured with the properties of the widget.
+
+==== Emitting Log messages with Severity
+
+Severity is conveyed via the `option` value sent along with the `STATUS` signal called `update-machine-log`.  The `option` parameter is a comma-delimited list, containing typically   
+
+```
+text = 'an error has occurred.'
+STATUS.emit('update-machine-log', text, 'TIME,ERROR')
+```
+
+==== Clearing the Log
+
+The log may be cleared by calling the `clear()` method of the widget.
 
 [[sub:qtvcp:widgets:macrotabdialog]]
 === `MacroTabDialog` - Macro Launch Dialog Widget
@@ -2692,10 +2735,10 @@ It is based on PyQt's _QDialog_.
 [[sub:qtvcp:widgets:calculatordialog]]
 === `CalculatorDialog` - Calculator Dialog Widget
 
+This is a dialog to *display a calculator for numeric entry*, such as origin offset, spindle RPM, etc.  It is primarily intended for touchscreen use, but it has support for physical keyboard input as well.
+
 .QtVCP `CalculatorDialog`: Calculator Dialog Widget
 image::images/qtvcp_calculator.png["QtVCP CalculatorDialog: Calculator Dialog Widget",scale="25%"]
-
-This is a dialog to *display a calculator for numeric entry*, such as origin offset.
 
 It returns the entry via `STATUS` messages using a Python `DICT`.
 
@@ -2705,12 +2748,25 @@ When using ``STATUS``'s `request-dialog` function, the default launch name is *`
 
 It is based on PyQt's _QDialog_.
 
-==== INI file options for CALCULATOR
+==== Preferences file options
 
-In the `DISPLAY` section of the INI file the following options may be set:
+In the `CALCULATOR` section of the preferences file the following options may be set:
 
-* `CALCULATOR_CONST_VALUES` - a comma-delimited list of common values you might enter, that will appear on a dedicated row of buttons at the bottom of the calculator.  e.g. setting to `0.100,-0.100` would provide two buttons for +0.100 and -0.100 which are commonly used when edge-finding on inch mills.  Up to six (6) values may be entered, beyond that the list will be truncated.  Values must be valid floating point or integer.
-* `CALCULATOR_ON_SHOW` - optionally set to `CLEAR_ALL` to issue a "Clear All" each time the calculator is shown.  This will clear any previously entered values from the last time the calculator was used and open with the display value set to `0`
+* `constValuesList` - A comma-delimited list of common values you might enter, that will appear on a dedicated row of buttons at the bottom of the calculator.  e.g. setting to `0.100, -0.100` would provide two buttons for +0.100 and -0.100 which are commonly used when edge-finding on inch mills.  Up to six (6) values may be entered, beyond that the list will be truncated.  Values must be valid floating point or integer.
+* `onShowBehavior` - A list of optional behaviors that will be triggered when the calculator dialog is shown.  Each option must be separated by a comma.
+  - `CLEAR_ALL` to issue a *Clear All* each time the calculator is shown.  This will clear any previously entered values from the last time the calculator was used and open with the display value set to `0`
+  - `FORCE_FOCUS` will force the focus to the calculator input field when the widget is shown.  This will allow a physical keyboard to provide input to the widget properly without additional clicks.  Also, it has the side-effect of selecting the current value, such that typing from a physical keyboard will replace the existing value unless the text selection is changed.
+* `acceptOnReturnKey` - If set to `True`, the calculator will accept the current value and close the dialog when the keyboard return/enter key is pressed.  If set to `False`, the return key will be ignored and the *Apply* button must be clicked.  For cases where the *Apply Next* button is available, the return key will perform this action instead, and the dialog will remain open.
+
+==== Physical keyboard support
+
+While the intent of this widget is to provide a touchscreen-friendly interface, it is possible to use a physical keyboard to enter values, typically via a numeric keypad. The keys perform mostly as one would expect, but a few special key functions also exist:
+
+* the *Enter* or *Return* key is equivalent to the *Equal* (=) operator in the cases where a calculation is pending.  Otherwise it will perform the *Apply* function if it is enabled via the `acceptOnReturnKey` preference.
+* the *minus key* ('-') will toggle the sign of the current number in the calculator display when it is hit twice in a row.  Otherwise when hit only once it will perform a subtraction operator as expected.
+* *Alt+Left Arrow* will perform *Back* function, moving to the previous field for cases where this is supported.
+* *Alt+Right Arrow* will perform a *Next* function, moving to the next field for cases where this is supported.
+* *Alt+Backspace* will cancel out of the calculator and not provide a return value to the calling widget.
 
 [[sub:qtvcp:widgets:runfromlinedialog]]
 === `RunFromLine` - Run-From-Line Dialog Widget
@@ -2736,7 +2792,7 @@ It is based on PyQt's _QDialog_.
 === `MachineLogDialog` - Machine and Debugging Logs Dialog Widget
 
 .QtVCP `MachineLogDialog`: Machine and Debugging Logs Dialog Widget
-image::images/qtvcp_machineLog.png["QtVCP MachineLogDialog: Machine and Debugging Logs Dialog Widget",scale="25%"]
+image::images/qtvcp_machineLogDialog.png["QtVCP MachineLogDialog: Machine and Debugging Logs Dialog Widget",scale="25%"]
 
 This is a dialog to *display the machine log and QtVCP's debugging log*.
 

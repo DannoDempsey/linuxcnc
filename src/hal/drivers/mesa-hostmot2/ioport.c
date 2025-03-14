@@ -204,8 +204,12 @@ static int do_alias(const char *orig_base, const char *alias_base,
         const char *suffix, int (*funct)(const char *, const char *)) {
     char orig_name[HAL_NAME_LEN];
     char alias_name[HAL_NAME_LEN];
-    snprintf(orig_name, sizeof(orig_name), "%s%s", orig_base, suffix);
-    snprintf(alias_name, sizeof(alias_name), "%s%s", alias_base, suffix);
+    // Take ncpy/ncat tour. Using snprintf() causes warning about possible
+    // trunctation, which in practice never happens.
+    strncpy(orig_name, orig_base, sizeof(orig_name)-1);
+    strncat(orig_name, suffix, sizeof(orig_name)-1);
+    strncpy(alias_name, alias_base, sizeof(alias_name)-1);
+    strncat(alias_name, suffix, sizeof(alias_name)-1);
     return funct(orig_name, alias_name);
 }
 
@@ -458,10 +462,9 @@ static void hm2_ioport_force_write_open_drain(hostmot2_t *hm2) {
 
 void hm2_ioport_initialize_ddr(hostmot2_t *hm2) {
     int port;
-    int port_pin;
 
     for (port = 0; port < hm2->ioport.num_instances; port ++) {
-        for (port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
+        for (unsigned port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
             int io_pin = (port * hm2->idrom.port_width) + port_pin;
             hm2->pin[io_pin].direction = hm2->pin[io_pin].direction_at_start;
         }
@@ -471,10 +474,9 @@ void hm2_ioport_initialize_ddr(hostmot2_t *hm2) {
 
 void hm2_ioport_update(hostmot2_t *hm2) {
     int port;
-    int port_pin;
 
     for (port = 0; port < hm2->ioport.num_instances; port ++) {
-        for (port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
+        for (unsigned port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
             int io_pin = (port * hm2->idrom.port_width) + port_pin;
 
             if (hm2->pin[io_pin].gtag == HM2_GTAG_IOPORT) {
@@ -576,14 +578,13 @@ void hm2_ioport_gpio_tram_write_init(hostmot2_t *hm2) {
 
 void hm2_ioport_gpio_process_tram_read(hostmot2_t *hm2) {
     int port;
-    int port_pin;
 
     // 
     // parse it out to the HAL pins
     //
 
     for (port = 0; port < hm2->ioport.num_instances; port ++) {
-        for (port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
+        for (unsigned port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
             int io_pin = (port * hm2->idrom.port_width) + port_pin;
             hal_bit_t bit;
 
@@ -604,14 +605,13 @@ void hm2_ioport_gpio_process_tram_read(hostmot2_t *hm2) {
 
 void hm2_ioport_gpio_prepare_tram_write(hostmot2_t *hm2) {
     int port;
-    int port_pin;
 
     //
     // copy HAL pins to HM2 pins
     //
 
     for (port = 0; port < hm2->ioport.num_instances; port ++) {
-        for (port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
+        for (unsigned port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
             int io_pin = (port * hm2->idrom.port_width) + port_pin;
 
             if (hm2->pin[io_pin].gtag != HM2_GTAG_IOPORT) continue;
@@ -626,7 +626,6 @@ void hm2_ioport_gpio_prepare_tram_write(hostmot2_t *hm2) {
 
 void hm2_ioport_gpio_read(hostmot2_t *hm2) {
     int port;
-    int port_pin;
 
     // this should never happen - what's an AnyIO board without IO?
     if (hm2->ioport.num_instances <= 0) return;
@@ -641,7 +640,7 @@ void hm2_ioport_gpio_read(hostmot2_t *hm2) {
 
     // FIXME: this block duplicates code in hm2_ioport_gpio_process_tram_read()
     for (port = 0; port < hm2->ioport.num_instances; port ++) {
-        for (port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
+        for (unsigned port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
             int io_pin = (port * hm2->idrom.port_width) + port_pin;
             hal_bit_t bit;
 
@@ -657,7 +656,6 @@ void hm2_ioport_gpio_read(hostmot2_t *hm2) {
 
 void hm2_ioport_gpio_write(hostmot2_t *hm2) {
     int port;
-    int port_pin;
 
     // this should never happen - what's an AnyIO board without IO?
     if (hm2->ioport.num_instances <= 0) return;
@@ -666,7 +664,7 @@ void hm2_ioport_gpio_write(hostmot2_t *hm2) {
 
     // FIXME: this block duplicates code in hm2_ioport_gpio_prepare_tram_write()
     for (port = 0; port < hm2->ioport.num_instances; port ++) {
-        for (port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
+        for (unsigned port_pin = 0; port_pin < hm2->idrom.port_width; port_pin ++) {
             int io_pin = (port * hm2->idrom.port_width) + port_pin;
 
             if (hm2->pin[io_pin].gtag != HM2_GTAG_IOPORT) continue;
