@@ -1,0 +1,141 @@
+########################################################################
+#
+# HAL file for Mazak Slant Turn 15 Universal 1000 CNC Lathe
+# using ethercat I/O system
+#
+#
+########################################################################
+
+
+########################################################################
+# Setup
+########################################################################
+# load kinematics and motion controller 
+loadrt trivkins coordinates=xz 
+
+#load an excessive number of digital io for potiental python/ngc mcodes
+loadrt motmod base_period_nsec=500000 servo_period_nsec=1000000 num_joints=2 num_dio=64 num_aio=16 num_spindles=1
+
+# load the ethercat config parser, use the complete file location
+loadusr -W lcec_conf mazak-ethercat.xml
+
+# load the ethercat real time module
+loadrt lcec
+
+#load PID for spindle control
+loadrt pid names=spindle-pid
+
+# load the gear change component
+loadrt sltgear
+
+# load the harmonic spindle speed component HSSC
+loadrt hssc
+
+# load the near component
+loadrt near count=1
+
+# load the frequency conversion function 
+loadrt conv_freq
+
+# load xor2 component for pid enable pin
+loadrt xor2 count=1
+
+# load conversion functions 
+loadrt conv_float_s32 count=2 
+loadrt conv_u32_s32 count=3
+
+# MPG components
+loadrt ilowpass count=1
+loadrt encoder  names=mpg
+
+
+# load a large classicladder file
+loadrt classicladder_rt numBits=10 numCounters=10 numTimersIec=20 numPhysInputs=200 numPhysOutputs=200
+
+# load scale function
+loadrt scale count=2
+
+loadrt conv_amps count=3
+
+#Simulated encoder for generating an index pulse for coordinated spindle motion
+#loadrt sim_enc_index
+
+########################################################################
+# 
+# Realtime function/thread links
+#
+########################################################################
+# lcec must be added first
+addf lcec.read-all servo-thread
+
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+
+# add classic ladder and start a specific file
+addf classicladder.0.refresh servo-thread
+
+# load a specific ladder file
+loadusr classicladder lathezy-ladder-3.0.clp
+
+# add the pid's to the servo thread
+addf spindle-pid.do-pid-calcs servo-thread
+
+# add the conversion functions to the servo-thread 
+addf conv-float-s32.0 servo-thread
+addf conv-float-s32.1 servo-thread
+
+addf conv-u32-s32.0   servo-thread
+addf conv-u32-s32.1   servo-thread
+addf conv-u32-s32.2   servo-thread  
+
+
+# Add sltgear to the servo-thread
+addf sltgear.0 servo-thread
+
+# add HSSC to the servo thread
+addf hssc.0     servo-thread
+
+# Add the near component to the servo-thread
+addf near.0 servo-thread
+
+# Add the convert frequency function to the servo-thread
+addf conv-freq.0 servo-thread
+
+# Add xor2 component to the servo-thread
+addf xor2.0 servo-thread
+
+# add the scale component to the servo-thread
+addf scale.0 servo-thread
+addf scale.1 servo-thread
+
+# Add MPG components
+addf ilowpass.0  servo-thread
+
+# encoder.capture-position should be updated more than 
+# encoder.update-counters. The MPG is not connected to a EL5101 encoder 
+# terminal instead it is connected to an EL1124 CMOS fast input terminal
+# due to the limited input frequency. However, since the the ethercat 
+# bus updates every millisecond there and there is no base thread running 
+# faster than the servo thread the position and count may not be correct.
+# ...potientally due to the limited frequency of the MPG wheel the error
+# may be negligable. 
+
+addf encoder.capture-position servo-thread
+addf encoder.update-counters  servo-thread
+
+addf conv-amps.0 servo-thread
+addf conv-amps.1 servo-thread
+addf conv-amps.2 servo-thread
+
+# Simulated encoder index
+#addf sim-enc-index.0 servo-thread
+
+# lcec must be written last
+addf lcec.write-all servo-thread
+
+
+
+
+
+
+

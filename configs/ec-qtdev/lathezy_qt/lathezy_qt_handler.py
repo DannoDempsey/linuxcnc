@@ -7,6 +7,7 @@ import linuxcnc
 import hal, hal_glib
 import time
 import math
+import subprocess
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -1056,15 +1057,18 @@ class HandlerClass:
             print("Hiding Wear Offsets")
 
         
-    #####################
-    # general functions #
-    #####################
+    ###########################################################################
+    # Misc. functions 
+    ###########################################################################
     def gcode_editMode(self):
         print("Edit G Code File")
     
     def gcode_readOnlyMode(self):
         print("Saving G Code File")
 
+    def on_btn_launch_cl_clicked(self):
+        print("Launching Classic Ladder")
+        subprocess.Popen(["classicladder"])
 
     #####################
     # KEY BINDING CALLS #

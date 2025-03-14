@@ -1,0 +1,14 @@
+# halshow watchlist created Mon May 24 17:43:25 EDT 2021
+
+pin+lcec.0.A1.home-start
+pin+lcec.0.A1.home-lsw
+pin+lcec.0.A1.homing-attained
+pin+joint.0.f-error
+pin+joint.0.free-pos-cmd
+pin+joint.0.pos-cmd
+pin+joint.0.pos-hard-limit
+pin+joint.0.pos-fb
+pin+axis.x.pos-cmd
+pin+joint.0.home-state
+pin+joint.0.home-sw-in
+pin+joint.0.homing

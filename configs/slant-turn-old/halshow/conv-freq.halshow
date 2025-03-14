@@ -1,0 +1,16 @@
+# halshow watchlist created Fri Jan 15 13:26:07 EST 2021
+
+pin+conv-freq.0.freq-in
+pin+conv-freq.0.revs-fb
+pin+conv-freq.0.rpm-fb
+pin+sltgear.0.rpm-in
+pin+sltgear.0.rpm-out
+pin+spindle-pid.FF0
+pin+spindle-pid.Pgain
+pin+spindle-pid.Igain
+pin+spindle-pid.Dgain
+pin+spindle-pid.command
+pin+spindle-pid.feedback
+pin+spindle-pid.output
+pin+spindle.0.at-speed
+pin+spindle.0.index-enable

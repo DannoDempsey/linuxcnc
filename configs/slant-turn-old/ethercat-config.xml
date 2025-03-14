@@ -1,0 +1,47 @@
+<masters>
+  <master idx="0" appTimePeriod="1000000" refClockSyncCycles="1000">
+    <slave idx="0" type="EK1100" name="D0"/>
+    <slave idx="1" type="EL1008" name="D1"/>
+    <slave idx="2" type="EL1008" name="D2"/>
+    <slave idx="3" type="EL1008" name="D3"/>
+    <slave idx="4" type="EL1008" name="D4"/>
+    <slave idx="5" type="EL1008" name="D5"/>
+    <slave idx="6" type="EL1124" name="D6"/>
+    <slave idx="7" type="EL2008" name="D7"/>
+    <slave idx="8" type="EL2008" name="D8"/>
+    <slave idx="9" type="EL2008" name="D9"/>
+    <slave idx="10" type="EL4102" name="D10"/>
+    <slave idx="11" type="EL5101" name="D11"/> 
+
+
+    <slave idx="12" type="generic" name="A1" vid="0x000001DD" pid="0x10305070" configPdos="true">
+    
+        <!-- Set the amp to csv mode -->
+        <sdoConfig idx="6060" subIdx="0"><sdoDataRaw data="08"/></sdoConfig>
+        <!-- Position Factor = Numerator/Feed-constant -->
+        <sdoConfig idx="6093" subIdx="1">
+            <sdoDataRaw data="05 00 00 00"/>
+        </sdoConfig>
+        <sdoConfig idx="6093" subIdx="2">
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="-25000"/>
+
+    </slave>
+
+    <slave idx="13" type="DeASDA" name="A2">
+        <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="-25000"/>
+    </slave>
+
+  </master>
+</masters>
+

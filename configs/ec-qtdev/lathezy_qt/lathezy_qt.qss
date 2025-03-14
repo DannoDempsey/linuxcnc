@@ -164,6 +164,7 @@ QScrollBar::handle:vertical {
     background-color: #2196F3;
     border-radius: 4px;
     margin: 30px 0px 30px 0px;
+    min-height: 15px;
 }
 
 /* Style the adjustment sliders */

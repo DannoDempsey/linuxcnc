@@ -1,0 +1,11 @@
+;Author D.Dempsey
+(info: Link subroutines by setting a universal tool change position)
+
+o<x-universal> sub
+
+(parameters)
+#<_XG53> = #1 (=-100.00 X ABS Coordinates)
+#<_ZG53> = #2 (=-200.00 Z ABS Coordinates)
+
+
+o<x-universal> endsub

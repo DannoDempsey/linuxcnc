@@ -1,0 +1,284 @@
+########################################################################
+# STATIC GUI CONNECTIONS AND SETTINGS -----------------------------------------
+# DO NOT CHANGE
+########################################################################
+# OVERRIDES
+# set the scale of the override controls to 100 so that they work in %
+setp gscreen.feed_override.scale    100 
+setp gscreen.jog_override.scale     100
+setp gscreen.spindle_override.scale 100
+setp gscreen.rapid_override.scale   100
+
+# LinuxCNC 2.8/2.9 requires the mpg to be hooked up to both axis and joints for joging 
+# without homing
+net joint0-jog-enable gscreen.joint0-jog-enable-out joint.0.jog-enable  axis.x.jog-enable
+net joint1-jog-enable gscreen.joint1-jog-enable-out joint.1.jog-enable  axis.z.jog-enable
+net joint0-jog-inc    gscreen.joint0-jog-inc-out    joint.0.jog-scale   axis.x.jog-scale
+net joint1-jog-inc    gscreen.joint1-jog-inc-out    joint.1.jog-scale   axis.z.jog-scale
+
+
+# green led's are updated by halpin changes
+net x-homed             gscreen.led_xaxis_homed     joint.0.homed
+net z-homed             gscreen.led_zaxis_homed     joint.1.homed
+
+net spindle-fwd     gscreen.led_spindle_fwd     
+net spindle-rev     gscreen.led_spindle_rev     
+
+net ec-all-op       classicladder.0.in-04
+
+# Halui
+net mode-manual halui.mode.is-manual classicladder.0.in-17
+net mode-mdi    halui.mode.is-mdi    classicladder.0.in-18
+net mode-auto   halui.mode.is-auto   classicladder.0.in-19
+
+
+##########################################################
+# LED connections
+##########################################################
+net ec-all-op   gscreen.led_ecat_all_op
+net A1-op-state lcec.0.A1.slave-state-op gscreen.led_slave1
+net A1-op-state lcec.0.A1.slave-state-op gscreen.led_slave2
+net D0-op-state lcec.0.D0.slave-state-op gscreen.led_slave3 
+net D1-op-state lcec.0.D1.slave-state-op gscreen.led_slave4
+net D2-op-state lcec.0.D2.slave-state-op gscreen.led_slave5
+net D3-op-state lcec.0.D3.slave-state-op gscreen.led_slave6
+net D4-op-state lcec.0.D4.slave-state-op gscreen.led_slave7
+net D5-op-state lcec.0.D5.slave-state-op gscreen.led_slave8
+net D6-op-state lcec.0.D6.slave-state-op gscreen.led_slave9
+net D7-op-state lcec.0.D7.slave-state-op gscreen.led_slave10
+net D8-op-state lcec.0.D8.slave-state-op gscreen.led_slave11
+net D9-op-state lcec.0.D9.slave-state-op gscreen.led_slave12
+net AIN-op-state  lcec.0.AIN.slave-state-op gscreen.led_slave13
+net D11-op-state  lcec.0.D11.slave-state-op gscreen.led_slave14
+net VFD-all-op  lcec.0.VFD.slave-state-op gscreen.led_slave15
+
+net x-pos-lsw   gscreen.led_x_pos_lsw
+net x-neg-lsw   gscreen.led_x_neg_lsw
+net x-fault-in  gscreen.led_x_fault
+
+net z-pos-lsw   gscreen.led_z_pos_lsw
+net z-neg-lsw   gscreen.led_z_neg_lsw
+net z-fault-in  gscreen.led_z_fault
+net mpg-active  gscreen.mpg-active => lcec.0.D7.dout-3 
+
+
+net vfd-fault-in    gscreen.led_vfd_fault
+
+########################################################################
+# LUBE/HYDRAULIC
+########################################################################
+# Spindle Lube
+net spindle-lube-psw classicladder.0.in-00
+net spindle-lube-ok  classicladder.0.out-00 => gscreen.led_spindle_lube
+
+# Slideway Lube (Wire no 56)
+net slideway-lube-psw classicladder.0.in-01 
+net way-lube-ok  classicladder.0.out-01 => gscreen.led_way_lube
+
+#TBD
+# Hydraulic Pressure
+#net hyd-pressure-psw classicladder.0.in-02
+
+# Cabinet Fan
+#net cabinet-fan classicladder.0.in-03
+
+
+#setp classicladder.0.in-01 1
+setp classicladder.0.in-02 1
+setp classicladder.0.in-03 1
+
+########################################################################
+# ESTOP  
+########################################################################
+
+# Connect the physical e-stop button
+net ext-estop       classicladder.0.in-07
+
+# Signal indicating the internal state of LinuxCNC's E-Stop State    
+net linux-estop     classicladder.0.in-08       iocontrol.0.user-enable-out
+
+# connect linuxcnc internal reset        
+net linux-reset     classicladder.0.in-09       iocontrol.0.user-request-enable
+
+# request e-stop enable from linuxcnc
+net estop-ok        classicladder.0.out-12      iocontrol.0.emc-enable-in
+
+########################################################################
+# Axis
+########################################################################
+
+# Convert the op mode feebdback for comparison in C.L.
+net x-mode-fb-in lcec.0.A1.srv-mode-fb => conv-u32-s32.0.in
+net z-mode-fb-in lcec.0.A2.srv-mode-fb => conv-u32-s32.1.in
+net x-mode-fb    conv-u32-s32.0.out => classicladder.0.s32in-04
+net z-mode-fb    conv-u32-s32.1.out => classicladder.0.s32in-05
+net x-mode-fb    gscreen.lbl_xmode_fb
+net z-mode-fb    gscreen.lbl_zmode_fb
+
+net x-error-code lcec.0.A1.srv-error-code => gscreen.lbl_x_fault
+net z-error-code lcec.0.A2.srv-error-code => gscreen.lbl_z_fault
+
+net x-amps-out conv-amps.0.motor-load  => gscreen.hbar_xload
+net z-amps-out conv-amps.1.motor-load  => gscreen.hbar_zload
+
+# Connect the joint enable pin to classicladder 
+net joint-0-enable joint.0.amp-enable-out => classicladder.0.in-11
+net joint-1-enable joint.1.amp-enable-out => classicladder.0.in-12
+
+# Connect the inhibit pins to motion.digital-out-xx pins
+net joint-0-inhibit motion.digital-out-40 => classicladder.0.in-13
+net joint-1-inhibit motion.digital-out-41 => classicladder.0.in-14
+
+# 0x6040=0x07             
+net switch-on <= classicladder.0.out-13 
+net switch-on => lcec.0.A1.switch-on lcec.0.A1.switch-on
+net switch-on => lcec.0.A2.switch-on lcec.0.A2.switch-on
+
+# 0x6040=0x0F
+net x-enable classicladder.0.out-22 => lcec.0.A1.enable-op
+net z-enable classicladder.0.out-23 => lcec.0.A2.enable-op
+
+# Homing pins
+net home-x-req      joint.0.homing => classicladder.0.in-60
+net home-x-start    lcec.0.A1.home-start <= classicladder.0.out-92
+net home-x-ack      lcec.0.A1.homing-attained => classicladder.0.in-61
+net home-x-done     joint.0.home-sw-in <= classicladder.0.out-91
+
+net home-z-req      joint.1.homing => classicladder.0.in-62
+net home-z-start    lcec.0.A2.home-start <= classicladder.0.out-95
+net home-z-ack      lcec.0.A2.homing-attained => classicladder.0.in-63
+net home-z-done     joint.1.home-sw-in <= classicladder.0.out-94
+
+# Fault pins
+net x-fault-in  lcec.0.A1.fault => joint.0.amp-fault-in
+net z-fault-in  lcec.0.A2.fault => joint.1.amp-fault-in 
+net fault-reset gscreen.btn_fault_reset => lcec.0.A1.fault-reset
+net fault-reset lcec.0.A2.fault-reset
+net fault-reset lcec.0.VFD.fault-reset
+
+
+########################################################################
+# Manual Chuck/Unchuck & M28 OPEN Chuck, M29 CLOSE Chuck
+########################################################################
+net fsw-in classicladder.0.in-16 
+net fsw-out classicladder.0.out-25
+
+
+########################################################################
+# GEAR SHIFT
+########################################################################
+# Inputs
+net lsw-1-in  gscreen.led_gear_neutral
+net lsw-3-in  gscreen.led_gear_low
+net lsw-4-in  gscreen.led_gear_high
+
+net sol-inch    classicladder.0.out-31
+net sol-inch-on classicladder.0.in-25
+
+########################################################################
+# Spindle
+########################################################################
+
+net vfd-zero-speed  lcec.0.D4.din-7 => classicladder.0.in-15
+net rpm-fb  gscreen.lbl_rpm
+net vfd-fault-in  lcec.0.VFD.fault => spindle.0.amp-fault-in 
+net vfd-mode-fb-in  lcec.0.VFD.opmode-fb => conv-u32-s32.2.in
+net vfd-mode-fb  conv-u32-s32.2.out => gscreen.lbl_vfd_mode_fb 
+
+net vfd-load  conv-amps.2.motor-load => gscreen.hbar_spindle_load
+
+########################################################################
+# Chuck
+########################################################################
+
+net chuck-cmd classicladder.0.in-20 <= motion.digital-out-45
+
+
+########################################################################
+# Turret
+########################################################################
+# Reed Switches
+net reed-sw1-in  classicladder.0.in-30   gscreen.led_turret_lsw1
+net reed-sw2-in  classicladder.0.in-31   gscreen.led_turret_lsw2
+net reed-sw3-in  classicladder.0.in-32   gscreen.led_turret_lsw3
+net reed-sw4-in  classicladder.0.in-33   gscreen.led_turret_lsw4
+net reed-sw5-in  classicladder.0.in-34   gscreen.led_turret_lsw5
+net reed-sw6-in  classicladder.0.in-35   gscreen.led_turret_lsw6
+net reed-sw7-in  classicladder.0.in-36   gscreen.led_turret_lsw7
+net reed-sw8-in  classicladder.0.in-37   gscreen.led_turret_lsw8
+net reed-sw9-in  classicladder.0.in-38   gscreen.led_turret_lsw9
+net reed-sw10-in classicladder.0.in-39   gscreen.led_turret_lsw10
+
+net turret-unclamp-lsw classicladder.0.in-40  gscreen.led_turret_locked
+net turret-odd-pos     classicladder.0.in-41  gscreen.led_turret_odd_pos
+net turret-even-pos    classicladder.0.in-42  gscreen.led_turret_even_pos
+
+# Unclamp Turret
+net sol-1  classicladder.0.out-43
+
+# Rotate Turret
+net sol-2B classicladder.0.out-45
+
+# Slow Rotate Turret
+net sol-2A classicladder.0.out-47
+
+# Connections         
+net tool-prepare-loopback   iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
+net tool-change             iocontrol.0.tool-change         classicladder.0.in-29    
+net tool-prep-number        iocontrol.0.tool-prep-number    classicladder.0.s32in-03 
+net tool-number             iocontrol.0.tool-number         classicladder.0.s32in-02
+net tool-changed            iocontrol.0.tool-changed        classicladder.0.out-50   
+  
+
+########################################################################
+# Tailstock/Tailsleeve
+########################################################################
+# Auto Mode Inputs
+net m31-step1     classicladder.0.in-43  <= motion.digital-out-22
+net m31-step2     classicladder.0.in-45  <= motion.digital-out-23
+net m32-step1     classicladder.0.in-46  <= motion.digital-out-24   
+net m32-step2     classicladder.0.in-44  <= motion.digital-out-25
+
+# Manual Mode Inputs
+net pb-tb-fwd   classicladder.0.in-50   gscreen.btn_tailbody_fwd
+net pb-tb-rev   classicladder.0.in-51   gscreen.btn_tailbody_rev
+net pb-ts-fwd   classicladder.0.in-54   gscreen.btn_tailsleeve_fwd
+net pb-ts-rev   classicladder.0.in-55   gscreen.btn_tailsleeve_rev
+
+# Limit Switch Inputs
+net lsw-8-in    classicladder.0.in-48     gscreen.led_tailbody_fwd
+net lsw-9-in    classicladder.0.in-49     gscreen.led_tailbody_rev
+net lsw-10-in   classicladder.0.in-52     gscreen.led_tailsleeve_fwd
+net lsw-11-in   classicladder.0.in-53     gscreen.led_tailsleeve_rev
+
+# Solenoid Outputs
+net sol-23      classicladder.0.out-62
+net sol-22A     classicladder.0.out-64
+net sol-22B     classicladder.0.out-66
+net sol-24A     classicladder.0.out-74
+net sol-24B     classicladder.0.out-76
+
+# Routine Completed Signals
+net m31-step1-done  classicladder.0.out-68  => motion.digital-in-08
+net m31-step2-done  classicladder.0.out-75  => motion.digital-in-09
+net m32-step1-done  classicladder.0.out-77  => motion.digital-in-10
+net m32-step2-done  classicladder.0.out-69  => motion.digital-in-11
+
+########################################################################
+# Operator Interface Buttons
+########################################################################
+# start cycle
+net pgm-start-in lcec.0.D3.din-0 => classicladder.0.in-70 
+net pgm-start    classicladder.0.out-80 => halui.program.run
+
+# program pauses as long as button is pressed
+net pgm-pause-in  lcec.0.D3.din-1 => classicladder.0.in-71
+net pgm-pause     classicladder.0.out-81 => halui.program.pause
+
+# In manual mode press to override limits
+net or-limits lcec.0.D5.din-0 gscreen.override-limits
+
+# coolant 
+net coolant-man gscreen.tbtn_coolant  =>  classicladder.0.in-21
+net coolant-cmd iocontrol.0.coolant-flood =>  classicladder.0.in-22
+net coolant-on  classicladder.0.out-26 => lcec.0.D7.dout-2

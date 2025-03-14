@@ -1,0 +1,36 @@
+(if we've arrived here then there is a fault executing one of the M-codes)
+(first we need to determine the value of the fault code [parameter #31])
+(then call the appropiate o-word procedure to clean up the fault)
+o<mcode_fault> sub
+(MSG, executing mcode_fault o-word procedure)
+#<passed_fault_code> = #31
+(DEBUG, passed fault code = #<passed_fault_code>)
+
+(M36 fault)
+o<936> sub
+    (debug, o<#31> called)
+    M65 P#<_ini[MOTION_OUT]SHIFT_REQUEST>
+    M65 P#<_ini[MOTION_OUT]SOL_20A>
+    M65 P#<_ini[MOTION_OUT]SOL_20B>
+o<936> endsub
+
+(M37 fault)
+o<937> sub
+(debug, o<#31> called)
+    M65 P#<_ini[MOTION_OUT]SHIFT_REQUEST>
+    M65 P#<_ini[MOTION_OUT]SOL_20A>
+    M65 P#<_ini[MOTION_OUT]SOL_20B>
+o<937> endsub
+
+(M39 fault)
+o<939> sub
+(debug, o<#31> called)
+    M65 P#<_ini[MOTION_OUT]SHIFT_REQUEST>
+    M65 P#<_ini[MOTION_OUT]SOL_20A>
+    M65 P#<_ini[MOTION_OUT]SOL_20B>
+o<939> endsub
+
+
+o<#31> call
+
+o<mcode_fault> endsub

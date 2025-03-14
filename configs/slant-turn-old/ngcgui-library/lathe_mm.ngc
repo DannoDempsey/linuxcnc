@@ -1,0 +1,15 @@
+(not_a_subfile)
+
+G18 (xz plane)
+G21 (mm)
+G40 (cancel cutter radius compensation)
+G49 (cancel tool length offset)
+G90 (absolute distance mode)
+G91.1 (except for arcs)
+G54 (Coordinate system 1 default)
+
+#<tol>  = 0.001
+G64 p#<tol> (path control stop)
+
+G95 F0.50
+G97 S1000

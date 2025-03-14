@@ -1,0 +1,15 @@
+# halshow watchlist created Mon Jan 18 17:51:58 EST 2021
+
+pin+mpg.counts
+pin+mpg.phase-A
+pin+mpg.phase-B
+pin+lcec.0.D6.din-0
+pin+lcec.0.D6.din-1
+pin+mpg.position
+pin+ilowpass.0.in
+pin+ilowpass.0.out
+pin+joint.0.jog-enable
+pin+joint.0.jog-counts
+pin+joint.0.jog-scale
+pin+joint.0.jog-vel-mode
+pin+joint.0.kb-jog-active

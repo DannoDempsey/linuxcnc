@@ -1,0 +1,25 @@
+o<fanuc2_toolchange> sub
+(lets see what we've got to work with...)
+(debug, TOOL REQUESTED = #<tool>)
+#<wear> = [10000 + FIX[ #<tool>  / 100]]
+#<tool> = [#<tool> MOD 100]
+(debug, tool= #<tool> wear= #<wear>)
+
+
+; cancel any previous tool offsets
+G49
+; call tool change with spindle and coolant off
+M5
+M9
+T#<tool>
+
+; apply tool offset if called
+
+    o110 if [#<wear> GT 10000]
+         G43 H#<tool>
+         G43.2 H#<wear>
+    o110 endif
+
+
+o<fanuc2_toolchange> endsub [1]
+M2

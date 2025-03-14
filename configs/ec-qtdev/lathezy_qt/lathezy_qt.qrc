@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="images">
+    <file>lathezy_qt-images/tool-tip.png</file>
     <file>lathezy_qt-images/x_minus_jog_button.png</file>
     <file>lathezy_qt-images/x_plus_jog_button.png</file>
     <file>lathezy_qt-images/z_minus_jog_button.png</file>

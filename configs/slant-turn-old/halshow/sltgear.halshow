@@ -1,0 +1,17 @@
+# halshow watchlist created Sat Jan 09 12:37:06 EST 2021
+
+pin+sltgear.0.lsw-neutral
+pin+sltgear.0.lsw-high
+pin+sltgear.0.lsw-low
+pin+sltgear.0.not-in-gear
+pin+sltgear.0.rpm-in
+pin+sltgear.0.rpm-out
+pin+sltgear.0.shift-allow
+pin+sltgear.0.shift-request
+pin+sltgear.0.zero-speed
+pin+hssc.0.rpm-in
+pin+hssc.0.rpm-out
+param+sltgear.0.low-gear-ratio
+param+sltgear.0.high-gear-ratio
+pin+spindle.0.at-speed
+pin+spindle.0.brake

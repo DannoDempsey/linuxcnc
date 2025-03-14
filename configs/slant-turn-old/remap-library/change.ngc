@@ -1,0 +1,38 @@
+o<change> sub
+(lets see what we've got to work with...)
+(expose the remap level)
+(debug, change; call_level= #<_call_level> remap_level=#<_remap_level>)
+
+(expose the parameters passed from change_prolog)
+(debug, change; tool_in_spindle=#<tool_in_spindle> selected_pocket=#<selected_pocket> selected_tool=#<selected_tool>)
+
+(see if the spindle is on and if so, which direction)
+(debug, change; spindle_on=#<_spindle_on> spindle_clockwise=#<_spindle_cw>)
+
+(see if the manual tool change pin is true)
+(debug, change; manual tool change = #<_hal[gscreen.manual-tool-change]>) 
+
+(we need to extract the tool number and the wear offset number from the selected_tool variable)
+#<tool> = [#<selected_tool> MOD 100]
+#<wear> = [10000 + FIX[#<selected_tool> / 100]]
+(debug, tool = #<tool>, wear offset = #<wear>)
+
+
+(cancel tool length compensation)
+G49
+(turn off the spindle)
+M5
+(turn off coolant)
+M9
+(call tool change)
+;M6 T#<selected_tool>
+M6 T#<tool>
+
+; demonstrate aborting a change on pocket  3 by returning a negative value
+;	o<testabort> if [#<_current_pocket> EQ 3]
+;		     o<testabort> return [-1]
+;	o<testabort> endif
+
+
+o<change> endsub [1]
+m2

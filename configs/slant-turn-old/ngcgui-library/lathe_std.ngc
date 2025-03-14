@@ -1,0 +1,14 @@
+(not_a_subfile)
+
+g18 (xz plane)
+g20 (inches)
+g40 (cancel cutter radius compensation)
+g49 (cancel tool length offset)
+g90 (absolute distance mode)
+G91.1 (except for arcs)
+G61 (Turn off Path Blending)
+
+G95 F0.0100
+G97 S1000
+G54 (WCS 1)
+M37 (Low Gear)

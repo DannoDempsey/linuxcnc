@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=MBTheme
+Name=ssstudiopro
+Comment=ssstudiopro
+
+PanelFgColor=black
+
+MenuBgColor=#9999aa
+MenuFgColor=black
+MenuBdColor=#595961
+MenuHlColor=#f6f6f6	
+
+PanelMsgBgCol=#a1a1ff
+PanelMsgBgUrgentCol=red
+PanelMsgFgCol=#595961
+
+PanelBgPixmap=title-bar.png
+DesktopBgSpec=img-stretched:/usr/share/themes/expose/background/default.png

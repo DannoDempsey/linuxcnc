@@ -1,0 +1,271 @@
+;Author: D.Dempsey Feb 2022
+;Info: Threading Cycle for EXTERNAL NPT tapered threads, Use G7(Diameter) dimensions
+
+
+
+o<x3-npt> sub
+#<StartDia> = #1 (= 1.875 D1 not required at this point)
+#<FinalDia> = #2 (= 1.900 D2 )
+#<Xretract> = #3 (= 0.2000 X Retract Distance above work piece)
+#<ZEnd> = #4 (= 1.000 Z End of thread, use 0 for Auto )
+#<TPI> = #5 (= 11.5 TPI)
+;#<ThreadDepth> = #6 (= 0.075 Height of Sharp V-thread) 
+;#<LeadIn> = #7 (= 2  x pitch)
+#<NumPasses> = #6 (= 10)
+#<NumSpringPasses> = #7 (= 2 Spring Passes)
+#<I> = #8 (=0.003  Dia. Finish Allowance)
+#<ExitTaper> = #9 (=1 Exit Taper)
+#<ExitDistance> = #10 (=0.087 Exit Distance)
+#<InfeedAngle> = #11(= 29.5 Angle, 0, 29, 29.5, 30)
+#<MaxDOC> = #12 (= 0.014 First DOC)
+#<MinDOC> = #13 (= 0.0005)
+#<ToolNumber> = #14  (= 3)
+#<ToolOffset> = #15  (= 3)
+#<TipRadius> = #16 (= 0.004 Tip Radius)
+#<SpindleDir> = #17  (= 3)
+#<Rpm> = #18 (= 500 RPM must be suitable for selected gear)
+#<Coolant> = #19 (=1 Coolant ON=1 OFF=0)     
+
+
+(Sanity Checks)
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (ABORT, EXITING -- Offset Number does not match tool number)
+o940 endif
+(debug, Tool Number = #<ToolNumber> , Tool Offset = #<ToolOffset> RPM = #<RPM> Spindle Dir. = #<SpindleDir>)
+
+(NPT Tapered Thread Calculations)
+;Pitch: tapered driveline
+#<Pitch> = [1.000488 / #<TPI>] 
+
+;E0 = Pitch Dia at begining of external threads
+#<E0> = [#<StartDia> - [0.05 * #<StartDia> + 1.1] * #<Pitch>]
+
+;L2 = Effective Thread Length
+#<L2> = [[0.80 * #<StartDia> + 6.8] * #<Pitch>] (Effective thread length)
+
+;V = Vanishing Thread Length
+#<V> = [#<Pitch> * 3.47] (Vanish thread length)
+
+;Thread Depth ... may want to make this set by user
+#<ThreadDepth> = [#<Pitch> * 0.866 - 2 * #<TipRadius>] 
+
+; L4 = Total Thread Length, if Z = 0,  #<ZEnd> = (#<L2> + #<V>) 
+
+o100 if [#<ZEnd> EQ 0 ]
+        #<L4> = [#<L2> + #<V>]
+o100 else 
+        #<L4> = #<ZEnd>
+o100 endif
+
+;Taper Angle
+#<TaperAngle> = ATAN[1]/[16]
+
+;Lead-In
+#<LeadIn> = [2 * #<Pitch>]
+
+;Calculate the constant K for incremental infeed
+#<K> = [#<ThreadDepth> / [SQRT[[#<NumPasses> - 1]]]]
+
+(debug, Pitch = #<Pitch>)
+(debug, Thread Depth = #<ThreadDepth>)
+(debug, Pitch Dia at begining of external thread = #<E0>)
+(debug, Effective Thread Length = #<L2>)   
+(debug, Vanishing Thread Length = #<V>)
+(debug, Overall Length or Truncated Length = #<L4>)
+(debug, Taper Angle = #<TaperAngle>)
+(debug, Lead In = #<LeadIn>)
+(debug, incremental infeed constant K = #<K>)
+
+;Calculate the taper dimensions. Asssumes the thread starts at Z0.0000
+;and ends at #<L4> or #<ZEnd>  
+#<X2> = #<FinalDia>
+#<Z2> = [-1 * #<L4>]
+        
+;Work backwards to calculate the staring dia. of the taper 
+;Taper = 1/16 " / Inch
+;This is the theoretical start of the thread and the point where we
+;will start infeeding at the compound angle 
+#<X1> = [#<X2> - [#<L4> + #<LeadIn>] * TAN[#<TaperAngle>]] 
+#<Z1> = #<LeadIn>
+
+o110 if [#<ExitTaper> NE 0 ] 
+        #<CutLength> = [#<Z1> - [#<Z2> + #<ExitDistance>]]
+o110 else
+        #<CutLength> = [#<Z1> - #<Z2>]
+o110 endif
+
+
+;Calculate the Retract Point
+#<Xr> = [#<X2> + #<Xretract>]
+#<Zr> = #<Z1> 
+
+;The exit taper is always an incremental distance of X = Pitch
+; and Z = #<ExitDistance>
+#<XExitInc> = #<Pitch>
+#<ZExitInc> = #<ExitDistance>
+#<ExitAngle> = ATAN[#<Pitch>]/[#<ExitDistance>]
+
+(debug, X1 = #<X1> Z1 = #<Z1>)
+(debug, X2 = #<X2> Z2 = #<Z2>)
+(debug, Xr = #<Xr> Zr = #<Zr>)
+(debug, Cutlength = #<CutLength>)
+(debug, Exit Taper Length = #<ExitDistance>)
+(debug, Exit Angle = #<ExitAngle>)
+
+(Calculate the fanuc style tool number) 
+#<fanuc_tool_number>= [FIX[#<ToolNumber> * 100] + #<ToolOffset>]
+(debug, fanuc tool number = #<fanuc_tool_number>)
+
+(Setup Commands)
+;G7 G18 G20              
+;G40
+;G49
+;G61   
+;Tool Change 
+;M6 T#<fanuc_tool_number>  
+
+
+;Spindle
+G95 F0.0200      ;Inch/Rev Mode
+G97 S#<Rpm>      ;Rpm Mode
+(debug, Spindle ON)
+M#<SpindleDir> 
+
+;Coolant
+o130 if [#<Coolant> EQ 1]
+        ;M08
+        (debug, Coolant ON)
+o130 else 
+        M09
+o130 end if 
+
+(Initialize loop parameters)  
+#<XInc> = 0
+#<ZInc> = 0      ;No Stepover on first pass
+#<PrevAPX> = 0
+#<PrevZInc> = 0
+#<TotalDepth> = 0
+#<Pass> = 1   ;Start Counting
+#<SpringPass> = 0
+
+
+
+G00 X#<Xr> Z#<Zr>
+
+
+    o200 repeat [#<NumPasses>]
+        (debug, Pass = #<Pass>)
+        ;(debug, Previous APX = #<PrevAPX>)
+
+        o210 if [#<Pass> EQ 1]
+                #<APX> = #<MaxDOC>
+                #<Xtemp> = #<MaxDOC>
+                #<ZInc> = 0           
+                #<TotalDepth> = [#<TotalDepth> + #<Xtemp>]
+                
+        o210 elseif [[#<Pass> GT 1] AND [#<Pass> LT #<NumPasses>]]
+                #<Y> = SQRT[[#<Pass> - 1]]
+                #<APX> = [#<K> * #<Y>]
+                #<Xtemp> = [#<APX> - #<PrevAPX>]              
+                #<TotalDepth> = [#<TotalDepth> + #<Xtemp>]
+                #<ZInc> = [TAN[#<InfeedAngle>] * [#<TotalDepth> - #<MaxDOC>]]
+
+        o210 else
+                 o215 if [#<InfeedAngle> EQ 0]
+                    (debug, Plunge Straight In)
+                    #<Y> = SQRT[[#<Pass> - 1]]
+                    #<APX> = [#<K> * #<Y>]
+                    #<Xtemp> = [#<APX> - #<PrevAPX>]              
+                    #<TotalDepth> = [#<TotalDepth> + #<Xtemp> - #<I>]
+                    #<ZInc> = #<PrevZInc>                    
+                    
+                o215 else
+                    #<Y> = SQRT[[#<Pass> - 1]]
+                    #<APX> = [#<K> * #<Y>]
+                    #<Xtemp> = [#<APX> - #<PrevAPX>]              
+                    #<TotalDepth> = [#<TotalDepth> + #<Xtemp> - #<I>]
+                    #<ZInc> = [TAN[#<InfeedAngle>] * [#<TotalDepth> - #<MaxDOC>]]                
+                
+                o215 endif                
+                                    
+                
+        o210 endif
+        
+        (debug, Xtemp = #<Xtemp> , Total Depth = #<TotalDepth> , ZInc = #<ZInc>)
+        
+        (Recalculate the Taper Dimensions for each pass)        
+        #<X4> = [#<X1> - [2 * #<TotalDepth>]]    
+        #<Z4> = [#<Z1> - #<ZInc>]
+        
+        #<X5> = [#<X4> +  [[#<CutLength> - #<ZInc>] * TAN[#<TaperAngle>]]]
+        #<Z5> = [#<Z2> + #<ExitDistance>] 
+
+        ;Calculate the end points of the exit taper 
+        
+        #<X7> = [#<X5> + [2 * #<XExitInc>]]
+        #<Z7> = #<Z2>
+ 
+        (debug, X4 = #<X4> Z4 = #<Z4>)
+        (debug, X5 = #<X5> Z5 = #<Z5>)
+        (debug, X7 = #<X7> Z5 = #<Z7>)
+        
+        (Threading)
+        M49
+        G01 X#<X4> Z#<Z4>
+        G33 X#<X5> Z#<Z5> K#<Pitch>
+        o120 if [#<ExitTaper> NE 0]
+                X#<X7> Z#<Z7> K#<Pitch>  ;G33 Still in effect. 
+        o120 endif
+
+        M48
+        G00 X#<Xr>
+        G00 Z#<Zr>
+
+        
+        #<PrevAPX> = #<APX>
+        #<PrevZInc> = #<ZInc>
+        #<Pass> = [#<Pass> + 1]
+
+    o200 endrepeat
+
+(Initiate Spring Pass Loop)
+#<SpringPass> = 1
+#<TotalDepth> = [#<TotalDepth> + #<I>]
+(debug, Total Depth = #<TotalDepth>)
+            
+#<X4> = [#<X1> - [2 * #<TotalDepth>]] 
+#<Z4> = [#<Z1> - #<ZInc>]
+#<X5> = [#<X4> +  [[#<CutLength> - #<ZInc>] * TAN[#<TaperAngle>]]]
+#<Z5> = [#<Z2> + #<ExitDistance>]
+#<X7> = [#<X5> + [ 2 * #<XExitInc>]]
+#<Z7> = #<Z2>
+
+(Spring Passes)
+    o240 if [#<NumSpringPasses> NE 0]
+        o250 repeat [#<NumSpringPasses>]
+            (debug, executing spring pass = #<SpringPass>)
+            (debug, CutDia  X4 = #<X4> , Z4 = #<Z4> , X5 = #<X5> Z5 = #<Z5>)
+            M49
+            G01 X#<X4> Z#<Z4>
+            G33 X#<X5> Z#<Z5> K#<Pitch>
+            o140 if [#<ExitTaper> NE 0]
+                G33 X#<X7> Z#<Z7> K#<Pitch>    
+            o140 endif
+            M48
+            G00 X#<Xr>
+            G00 Z#<Zr> 
+            
+            #<SpringPass> = [#<SpringPass> + 1]  
+        
+        o250 endrepeat
+
+    o240 endif 
+
+M09
+M05
+
+
+
+
+
+o<x3-npt> endsub

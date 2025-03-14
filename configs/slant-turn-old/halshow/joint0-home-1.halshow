@@ -1,0 +1,19 @@
+# halshow watchlist created Tue Oct 19 14:31:34 EDT 2021
+
+pin+joint.0.motor-pos-cmd
+pin+joint.0.motor-pos-fb
+pin+joint.0.pos-cmd
+pin+joint.0.pos-fb
+pin+joint.0.free-pos-cmd
+pin+joint.0.home-state
+pin+joint.0.homing
+pin+joint.0.home-sw-in
+pin+joint.0.homed
+pin+joint.0.vel-cmd
+pin+lcec.0.A1.homing-attained
+pin+lcec.0.A1.change-set
+pin+lcec.0.A1.fault
+pin+lcec.0.A1.following-error
+pin+joint.0.f-error
+pin+gscreen.lbl_xmode_fb
+pin+joint.0.home_auto_sync

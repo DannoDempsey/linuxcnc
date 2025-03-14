@@ -1,0 +1,129 @@
+;Autor: D.Dempsey
+(info: Enlarge Hole by Off Center Drilling, Use Indexable Drill Only)
+
+o<x-oc-drill> sub
+
+(Parameters)
+#<X0> = #1 (=2.0000 Start Dia.)
+#<Z0> = #2 (=0.2500 Z Clear)
+#<StartDia> = #3 (=2.000)
+#<FinalDia> = #4 (=4.000)
+#<ZDepth> = #5 (=-1.000)
+#<ZInc> = #6 (=0.300 )
+#<XStepover> = #7 (=0.375)
+#<ToolNumber> = #8 (=10)
+#<ToolOffset> = #9 (=10)
+#<CSS> = #10 (=200 CSS Units/Min)
+#<FeedRate> = #11 (=0.0080 Feed Units/Rev)
+#<Gear> = #12 (=39 Gear Low=37 High=39)
+#<GearMaxRPM> = #13 (=3500) 
+#<SpindleDir> = #14 (=03)
+#<Coolant> = #15 (=8 Coolant On=8, Off=9)
+#<UTC> = #16 (=1 Yes=1, No=0)
+
+(Calculations)
+;Calculate the number of steps to enlarge the hole
+#<NumPasses> = FUP[[#<FinalDia> - #<StartDia>] / [2 * #<XStepover>]] 
+(debug, Number Passes = #<NumPasses>)
+
+;Calculate the fanuc style tool number 
+#<fanuc_tool_number>= [[#<ToolNumber> * 100] + #<ToolOffset>]
+(debug, fanuc tool number = #<fanuc_tool_number>)
+
+;Calculate the starting rpm based on the staring diameter to avoid 
+;wild rpm swings when G96 is called
+#<StartRPM> = [3.82 * [#<CSS> / #<StartDia>]]
+(debug, Start Spindle at #<StartRPM> RPM)
+
+(Sanity Checks)
+o910 if [[#<Gear> NE 38] AND [#<Gear> NE 39]]
+        (debug, No gear selected -- EXITING)
+        o<on_abort> call
+o910 endif
+
+o920 if [[#<Gear> EQ 38] AND [#<GearMaxRPM> GT 1500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        o<on_abort> call
+o920 endif
+
+o930 if [[#<Gear> EQ 39] AND [#<GearMaxRPM> GT 3500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        o<on_abort> call
+o930 endif
+
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (debug, Offset Number does not match Tool Number -- EXITING)
+        o<on_abort> call
+o940 endif
+
+(Setup Commands)
+G7 G18                             ;Dia. Mode
+G95  F#<FeedRate>               ;Feed Units/Rev
+G40                             ;Cancel Cutter Comp. 
+G49                             ;Cancel Tool Offset       
+
+(Tool Change)
+o105 if [#<UTC> EQ 1]
+        G53 G00 X#<_XG53> Z#<_ZG53> ;Tool Change Position         
+o105 endif
+
+
+M61 Q#<ToolNumber>                               
+M6 T#<fanuc_tool_number>         ;Tool Change at G53 Coordiantes 
+#<D> = #5410                     ;Tool Diameter
+#<L> = #5413                     ;Tool Orientation
+(debug, Tool Dia = #<D> Tool Orientation = #<L>)
+  
+(Gear Change)
+;M#<Gear>           ;Shift Gears
+;G04 P2             ;Wait for gear shift to complete
+
+(Spindle)
+G97 S#<StartRPM>            ;RPM mode
+M#<SpindleDir>  M#<Coolant> ;Spindle On, Coolant On
+G04 P1                      ;Wait for Spindle
+
+(Start Position)
+G00 X#<X0> Z#<Z0>           ;Rapid to Start Position
+G96 D#<GearMaxRPM> S#<CSS>  ;CSS On
+G95 F#<FeedRate>            ;Units/Rev
+G04 P01                     ;Wait for Spindle
+
+(Initialize Loop Parameters)
+#<XInc> = [2 * #<XStepover>]
+#<Pass> = 1
+
+o200 repeat [#<NumPasses>]
+        (debug, Pass = #<Pass>)
+        
+        #<Xtemp> = [#<StartDia> + [#<Pass> * #<XInc>]]
+        
+        o220 if [#<Xtemp> GT #<FinalDia>]
+                #<Xtemp> = #<FinalDia>
+        
+        o220 endif
+                        
+        (debug, Xtemp = #<Xtemp>)
+        
+        G00 X#<Xtemp>
+        G01 Z#<ZDepth> F#<FeedRate>
+        G00 Z#<Z0>
+        
+
+        #<Pass> = [#<Pass> + 1]
+o200 endrepeat
+
+(Cleanup)
+
+G97 S#<StartRPM>            ;RPM mode
+G04 P1                      ;Wait for Spindle
+
+o110 if [#<UTC> EQ 1]
+        G53 G00 X#<_XG53> Z#<_ZG53> ;Tool Change Position         
+o110 endif
+
+M5                          ;Spindle OFF
+M9                          ;Coolant OFF
+
+o<x-oc-drill> endsub
+ 

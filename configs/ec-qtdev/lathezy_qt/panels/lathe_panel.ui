@@ -107,34 +107,24 @@
            </widget>
           </item>
           <item>
-           <widget class="RoundButton" name="Roundbutton">
+           <widget class="PushButton" name="btn_estop">
             <property name="minimumSize">
              <size>
-              <width>100</width>
-              <height>100</height>
+              <width>80</width>
+              <height>80</height>
              </size>
             </property>
             <property name="text">
              <string>ESTOP</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
             </property>
             <property name="checked">
              <bool>true</bool>
             </property>
             <property name="pin_name" stdset="0">
              <string>estop</string>
-            </property>
-            <property name="indicator_option" stdset="0">
-             <bool>true</bool>
-            </property>
-            <property name="shape_option" stdset="0">
-             <number>0</number>
-            </property>
-            <property name="off_color" stdset="0">
-             <color>
-              <red>50</red>
-              <green>205</green>
-              <blue>50</blue>
-             </color>
             </property>
            </widget>
           </item>
@@ -500,11 +490,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>IndicatedPushButton</class>
-   <extends>QPushButton</extends>
-   <header>qtvcp.widgets.simple_widgets</header>
-  </customwidget>
-  <customwidget>
    <class>PushButton</class>
    <extends>QPushButton</extends>
    <header>qtvcp.widgets.simple_widgets</header>
@@ -518,16 +503,6 @@
    <class>LED</class>
    <extends>QWidget</extends>
    <header>qtvcp.widgets.led_widget</header>
-  </customwidget>
-  <customwidget>
-   <class>ActionButton</class>
-   <extends>IndicatedPushButton</extends>
-   <header>qtvcp.widgets.action_button</header>
-  </customwidget>
-  <customwidget>
-   <class>RoundButton</class>
-   <extends>ActionButton</extends>
-   <header>qtvcp.widgets.action_button_round</header>
   </customwidget>
  </customwidgets>
  <resources/>

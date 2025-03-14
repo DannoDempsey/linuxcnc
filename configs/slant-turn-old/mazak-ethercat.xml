@@ -1,0 +1,336 @@
+<masters>
+
+    <master idx="0" appTimePeriod="1000000" refClockSyncCycles="1000">
+        <!-- BECKHOFF BUS COUPLER/TERMINALS -->
+        <!-- NOTE: EL1124 are 5V ONLY! -->
+        <slave idx="0" type="EK1100" name="D0"/>
+        <slave idx="1" type="EL1008" name="D1"/>
+        <slave idx="2" type="EL1008" name="D2"/>
+        <slave idx="3" type="EL1008" name="D3"/>
+        <slave idx="4" type="EL1008" name="D4"/>
+        <slave idx="5" type="EL1008" name="D5"/>
+        <slave idx="6" type="EL1124" name="D6"/>
+        <slave idx="7" type="EL2008" name="D7"/>
+        <slave idx="8" type="EL2008" name="D8"/>
+        <slave idx="9" type="EL2008" name="D9"/>
+        <slave idx="10" type="EL3152" name="AIN"/>
+        <slave idx="11" type="EL5101" name="D11"/>
+        
+
+        <!-- DELTA ASDA-A2-E X-Axis Servo -->
+        <slave idx="12" type="generic" name="A1" vid="0x000001DD" pid="0x10305070" configPdos="true">
+        
+            <!-- Set to CSP Mode 0x08 -->
+            <sdoConfig idx="6060" subIdx="0"><sdoDataRaw data="08"/></sdoConfig>
+
+            <!-- Electronic Gear Ratio -->
+            <!-- Same as P1-44 Electronic Gear Ratio Numerator = 1  --> 
+            <sdoConfig idx="6093" subIdx="1">
+                <sdoDataRaw data="01 00 00 00"/>
+            </sdoConfig> 
+            <!-- Same as P1-45 Electronic Gear Ratio Denominator =1 -->
+            <sdoConfig idx="6093" subIdx="2">
+                <sdoDataRaw data="01 00 00 00"/>
+            </sdoConfig> 
+            
+            
+            <!-- Homing Method: 19 initial move in the positive direction, no index pulse -->
+            <sdoConfig idx="6098" subIdx="0">
+                <sdoDataRaw data="19"/>
+            </sdoConfig>
+ 
+            <!-- Search Speed for homing routine, Unit 0.1 Rpm-->
+            <sdoConfig idx="6099" subIdx="1">
+                <sdoDataRaw data="E8 03 00 00"/>
+            </sdoConfig>
+             
+            <!-- Search Speed for home switch, Unit 0.1 Rpm-->
+            <sdoConfig idx="6099" subIdx="2">
+                <sdoDataRaw data="64 00 00 00"/>
+            </sdoConfig>
+
+            <!-- Mailboxes -->
+            <syncManager idx="0" dir="out"></syncManager>
+
+            <syncManager idx="1" dir="in"></syncManager>                
+
+            <syncManager idx="2" dir="out">
+                <pdo idx="1602">
+                    <!-- Control Word -->
+                    <pdoEntry idx="6040" subIdx="0" bitLen="16" halType="complex">
+                        <complexEntry bitLen="1" halPin="switch-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="enable-voltage" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="quick-stop" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="enable-op" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="home-start" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="change-set" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="relative" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="fault-reset" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="halt" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-9" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-10" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-11" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-12" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-13" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-14" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-15" halType="bit"/>
+                    </pdoEntry>
+                    
+                    <!-- Target Position -->
+                    <pdoEntry idx="607A" subIdx="0" bitLen="32" halPin="srv-pos-cmd" halType="float" scale="256000.00"/> 
+            
+                    <!-- Mode -->
+                    <pdoEntry idx="6060" subIdx="0" bitLen="8"  halPin="op-mode" halType="bit"/>
+
+                </pdo>
+
+            </syncManager>
+
+            <syncManager idx="3" dir="in">
+                <pdo idx="1A02">
+                    <!-- Status Word -->
+                    <pdoEntry idx="6041" subIdx="0" bitLen="16" halType="complex">
+                        <complexEntry bitLen="1" halPin="rdy-to-switch-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="switched-on" halType="bit" />
+                        <complexEntry bitLen="1" halPin="op-enabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="fault" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="voltage-enabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="quick-stop-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="switch-on-disabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="warning" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="status-08" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="remote" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="target-reached" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="internal-limit" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="homing-attained" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="following-error" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="status-14" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="status-15" halType="bit"/>                        
+                    </pdoEntry>
+                    
+                    
+                    
+                    <pdoEntry idx="606C" subIdx="0" bitLen="32" halPin="srv-vel-fb" halType="float" scale="0.016666666"/>
+                    <pdoEntry idx="6064" subIdx="0" bitLen="32" halPin="srv-pos-fb" halType="float" scale="3.9063e-6"/>
+                    <pdoEntry idx="6061" subIdx="0" bitLen="8"  halPin="srv-mode-fb" halType="u32"/>
+                    
+                    <!-- Digital Input Status -->
+                    <pdoEntry idx="60FD" subIdx="0" bitLen="32" halType="complex" >
+                        <complexEntry bitLen="1"  halPin="neg-lsw" halType="bit" />
+                        <complexEntry bitLen="1"  halPin="pos-lsw" halType="bit" />
+                        <complexEntry bitLen="1"  halPin="home-lsw" halType="bit" />
+                        <complexEntry bitLen="29" halPin="reserved" halType="bit" />
+                    </pdoEntry>
+                    
+                    <pdoEntry idx="603F" subIdx="0" bitLen="16" halPin="srv-error-code" halType="u32"/>
+                    <pdoEntry idx="6078" subIdx="0" bitLen="16" halPin="amps" halType="float" scale="0.1" />
+                </pdo>
+            </syncManager> 
+ 
+            <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+            <watchdog divider="2498" intervals="1000"/>
+
+        </slave>
+
+        <!-- Delta ASDA-A2-E Z-Axis Servo -->
+        <slave idx="13" type="generic" name="A2" vid="0x000001DD" pid="0x10305070" configPdos="true">
+            
+            
+            <!-- Set to CSP Mode 0x08 -->
+            <sdoConfig idx="6060" subIdx="0"><sdoDataRaw data="08"/></sdoConfig>
+
+            <!-- Electronic Gear Ratio -->
+            <!-- P1-44 Electronic Gear Numerator = 24 --> 
+            <sdoConfig idx="6093" subIdx="1">
+                <sdoDataRaw data="01 00 00 00"/>
+            </sdoConfig> 
+            <!-- P1-45 Electronic Gear Denominator = 29 -->
+            <sdoConfig idx="6093" subIdx="2">
+                <sdoDataRaw data="01 00 00 00"/>
+            </sdoConfig> 
+
+            <!-- Following Error Window -->
+            <!-- Default 38400 PUU = 0.3mm-->
+            <!-- Set to 256000 PUU = 1.00 mm -->
+            <!-- This will allow LinuxCNC to trigger the F-Error if necessary-->
+
+            <sdoConfig idx="6065" subIdx="0">
+                <sdoDataRaw data="00 E8 03 00"/>
+            </sdoConfig>
+            
+            <!-- Homing Method: 19 initial move in the positive direction-->
+            <sdoConfig idx="6098" subIdx="0">
+                <sdoDataRaw data="19"/>
+            </sdoConfig>
+             
+            <!-- Search Speed for homing routine  = 250 Rpm-->
+            <sdoConfig idx="6099" subIdx="1">
+                <sdoDataRaw data="E8 03 00 00"/>
+            </sdoConfig>
+             
+            <!-- Search Speed for home switch = 100 Rpm -->
+            <sdoConfig idx="6099" subIdx="2">
+                <sdoDataRaw data="64 00 00 00"/>
+            </sdoConfig>
+
+            <syncManager idx="0" dir="out"></syncManager>
+
+            <syncManager idx="1" dir="in"></syncManager>
+
+            <syncManager idx="2" dir="out">
+                <pdo idx="1602">
+                    <pdoEntry idx="6040" subIdx="0" bitLen="16" halType="complex">
+                        <complexEntry bitLen="1" halPin="switch-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="enable-voltage" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="quick-stop" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="enable-op" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="home-start" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="change-set" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="relative" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="fault-reset" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="halt" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-9" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-10" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-11" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-12" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-13" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-14" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="control-15" halType="bit"/>
+                    </pdoEntry>
+
+                    <!-- Target Position -->
+                    <pdoEntry idx="607A" subIdx="0" bitLen="32" halPin="srv-pos-cmd" halType="float" scale="154667.00"/>                     
+                                                                                                       
+                    <pdoEntry idx="6060" subIdx="0" bitLen="8"  halPin="op-mode" halType="bit"/>
+                </pdo>
+            </syncManager>
+
+            <syncManager idx="3"  dir="in">
+                <pdo idx="1A02">
+                    <pdoEntry idx="6041" subIdx="0" bitLen="16" halType="complex">
+                        <complexEntry bitLen="1" halPin="rdy-to-switch-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="switched-on" halType="bit" />
+                        <complexEntry bitLen="1" halPin="op-enabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="fault" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="voltage-enabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="quick-stop-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="switch-on-disabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="warning" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="status-08" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="remote" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="target-reached" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="internal-limit-active" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="homing-attained" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="following-error" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="status-14" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="status-15" halType="bit"/>
+                    </pdoEntry>
+                    
+                    <pdoEntry idx="606C" subIdx="0" bitLen="32" halPin="srv-vel-fb" halType="float" scale="0.016666666"/>
+                    <pdoEntry idx="6064" subIdx="0" bitLen="32" halPin="srv-pos-fb" halType="float" scale="6.4655e-6"/>
+                    <pdoEntry idx="6061" subIdx="0" bitLen="8"  halPin="srv-mode-fb" halType="u32"/>
+                    
+                    <pdoEntry idx="60FD" subIdx="0" bitLen="32" halType="complex">
+                        <complexEntry bitLen="1"  halPin="neg-lsw" halType="bit" />
+                        <complexEntry bitLen="1"  halPin="pos-lsw" halType="bit" />
+                        <complexEntry bitLen="1"  halPin="home-lsw" halType="bit" />
+                        <complexEntry bitLen="29" halPin="reserved" halType="bit" />
+                    </pdoEntry>
+                
+                    <!-- Error Code -->    
+                    <pdoEntry idx="603F" subIdx="0" bitLen="16" halPin="srv-error-code" halType="u32"/>
+                
+                    <!-- Servo-Amps-->
+                    <pdoEntry idx="6078" subIdx="0" bitLen="16" halPin="amps" halType="float" scale="0.1" />
+                
+                </pdo>
+           
+            </syncManager>
+           
+            <dcConf assignActivate="300" sync0Cycle="*1" sync0Shift="0"/>
+            <watchdog divider="2498" intervals="1000"/>
+        
+        </slave>
+
+        <!--Delta C2000 VFD -->         
+        <slave idx="14" type="generic" name="VFD" vid="0x000001DD" pid="0x10400140" configPdos="true">        
+                  
+            <!-- IMPORTANT: in this case (sync1Cycle = n * sync0Cycle) sync1Cycle must be appTimePeriod - sync0Cycle) -->
+            <dcConf sync0Cycle="250000" sync0Shift="50000" sync1Cycle="750000" sync1Shift="250000"/>
+
+            <!-- Mode, Velocity-->
+            <sdoConfig idx="6060" subIdx="0" >
+                <sdoDataRaw data="02"/>
+            </sdoConfig>
+           
+            <!-- Ramp time 2000 ms-->
+            <sdoConfig idx="604F" subIdx="0">
+                <sdoDataRaw data="D0 07 00 00"/>
+            </sdoConfig>
+
+            <!-- Slow down time 2000 ms -->
+            <sdoConfig idx="6050" subIdx="0">
+                <sdoDataRaw data="D0 07 00 00" />
+            </sdoConfig>
+
+
+            <!-- setup the syncManager -->
+            
+
+            <syncManager idx="2" dir="out">
+                <pdo idx="1600">
+
+                    <!--vfd control-word -->
+                    <pdoEntry idx="6040" subIdx="0" bitLen="16" halType="complex">
+                        <complexEntry bitLen="1" halPin="switch-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="enable-voltage" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="quick-stop" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="enable-op" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="run" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="unlock" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="use-ref" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="fault-reset" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="estop-in" halType="bit"/>
+                        <complexEntry bitLen="7" halPin="control" halType="bit"/>
+                    </pdoEntry>
+                    
+                    <pdoEntry idx="6042" subIdx="0" bitLen="16" halPin="target-vel" halType="float" scale="1.0"/>
+                    <pdoEntry idx="6060" subIdx="0" bitLen="08" halPin="op-mode" halType="bit"/> 
+
+                </pdo>
+
+            </syncManager>
+
+            <syncManager idx="3" dir="in">
+
+                <pdo idx="1A00">
+                    <pdoEntry idx="6041" subIdx="0" bitLen="16" halType="complex">
+                        <complexEntry bitLen="1" halPin="ready-to-switch-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="switched-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="op-enabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="fault" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="voltage-enabled" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="quick-stop-on" halType="bit"/>
+                        <complexEntry bitLen="1" halPin="switch-on-disabled" halType="bit"/>
+                        <complexEntry bitLen="9" halPin="status" halType="bit"/>
+                    </pdoEntry>
+                                        
+                    <pdoEntry idx="6043" subIdx="0" bitLen="16" halPin="velocity-demand" halType="float" scale="1.0"/>
+                    <pdoEntry idx="6061" subIdx="0" bitLen="08" halPin="opmode-fb" halType="u32"/>
+                    <pdoEntry idx="603F" subIdx="0" bitLen="16" halPin="error-code" halType="u32" />
+                </pdo>
+                
+                
+
+            </syncManager>
+            
+
+            
+            
+        </slave>
+
+
+                       
+    </master>
+
+</masters>

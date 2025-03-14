@@ -1,0 +1,88 @@
+(M36 hydraulic shift neutral gear)
+
+
+o<m36> sub
+
+(debug, executing M36 ngc file)
+(expose the remap level)
+(debug, M36; call_level= #<_call_level> remap_level=#<_remap_level>, , value passed to M36 = #36)
+    
+    (Check to see if the spindle is already running)
+    (debug, Spindle is running = #<_spindle_on> )
+    
+    o90 if [#<_spindle_on> EQ 1]
+            (debug, Turning off spindle)
+            M5
+            G04 P#<_ini[DWELL]SPINDLE_DELAY>         
+    o90 endif        
+    
+    
+    (Already in Neutral)
+    o100    if [#36 EQ 1.0 ]
+            (debug, Already in NEUTRAL, nothing to do)
+            
+
+    (Low Gear)
+    o100    elseif [#36 EQ 2.0 ] 
+            (debug, shift request on)
+            M64 P#<_ini[MOTION_OUT]SHIFT_REQUEST>            
+            G97
+            M03 S90
+            G04 P#<_ini[DWELL]SHIFT_DELAY>
+            
+            (debug, shifting low to neutral)
+            M64 P#<_ini[MOTION_OUT]SOL_20B>
+            M66 P#<_ini[MOTION_IN]LSW1> L3 Q10
+            
+            (debug, shift request off)
+            M5
+            M65 P#<_ini[MOTION_OUT]SOL_20B>
+            M65 P#<_ini[MOTION_OUT]SHIFT_REQUEST>
+
+    (High Gear)
+    o100    elseif [#36 EQ 3.0 ]
+            (debug, shift request on)
+            M64 P#<_ini[MOTION_OUT]SHIFT_REQUEST>            
+            G97
+            M03 S90
+            G04 P#<_ini[DWELL]SHIFT_DELAY>    
+            
+            (debug, shifting high to neutral)
+            M64 P#<_ini[MOTION_OUT]SOL_20A> 
+            M66 P#<_ini[MOTION_IN]LSW1> L3 Q10
+            
+            (debug, shift request off)
+            M5
+            M65 P#<_ini[MOTION_OUT]SOL_20A>
+            M65 P#<_ini[MOTION_OUT]SHIFT_REQUEST>
+
+    (Position is unknown)            
+    o100    else
+            (debug, position unknown)
+            M64 P#<_ini[MOTION_OUT]SHIFT_REQUEST>            
+            G97
+            M03 S90
+            G04 P#<_ini[DWELL]SHIFT_DELAY>    
+            
+            (debug, Move to a known location, low gear)
+            M64 P#<_ini[MOTION_OUT]SOL_20A> 
+            M66 P#<_ini[MOTION_IN]LSW3> L3 Q10
+            M5
+            M65 P#<_ini[MOTION_OUT]SOL_20A> 
+            G04 P#<_ini[DWELL]SHIFT_DELAY>
+            
+            (debug, Now that we know where we are, shift into neutral)
+            M03 S90            
+            M64 P#<_ini[MOTION_OUT]SOL_20B>
+            M66 P#<_ini[MOTION_IN]LSW1> L3 Q30
+            
+            (debug, in neutral )
+            M5
+            M65 P#<_ini[MOTION_OUT]SOL_20B>
+            M65 P#<_ini[MOTION_OUT]SHIFT_REQUEST>
+
+    o100    endif
+    
+
+o<m36> endsub 
+M2

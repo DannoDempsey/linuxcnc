@@ -1,0 +1,6 @@
+# halshow watchlist created Fri Jan 21 08:41:23 EST 2022
+
+pin+joint.1.pos-cmd
+pin+joint.1.pos-fb
+pin+joint.1.f-error
+pin+lcec.0.A2.following-error

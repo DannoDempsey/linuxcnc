@@ -1,0 +1,23 @@
+o<fanuc_toolchange> sub
+(lets see what we've got to work with...)
+(debug, TOOL REQUESTED = #<tool>)
+#<wear> = [10000 + FIX[ #<tool>  / 100]]
+#<tool> = [#<tool> MOD 100]
+; cancel any previous tool offsets
+G49
+; call tool change with spindle off
+M6 T#<tool>
+; apply tool offset
+G43 H#<tool>
+; if called apply the wear offset
+    o100 if [#<wear> GT 10000]
+        G43.2 H#<wear>
+    o100 endif
+(debug, tool= #<tool> wear= #<wear>)
+
+	; show aborting a prepare on tool 11 by returning a negative value
+	;<testabort> if [#<tool> EQ 11]
+	;	     o<testabort> return [-1]
+	;<testabort> endif
+
+o<fanuc_toolchange> endsub [0]

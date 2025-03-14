@@ -1,0 +1,151 @@
+; Author: D.Dempsey
+(info: Turn OD taper or straight turn to a square shoulder G7 Active Diameter)
+
+o<x3-od-taper> sub
+
+(Parameters)
+#<StartDia> = #1 (=2.0000 Material Dia)
+#<X0> = #2 (= 2.5000 X Retract)
+#<Z0> = #3 (= 0.2500 Z Retract) 
+#<X1> = #4 (=1.8387 X1 Dia. at Start of Taper)
+#<Z1> = #5 (=0.0000 Z1 Start of Taper)
+#<Z2> = #6 (=-1.000 Z2 End of Taper)
+#<Angle> = #7 (=1.7833 1/2 the included Taper Angle, in Degrees)
+#<I> = #8 (=0.020 X Fin. Allowance)
+#<K> = #9 (=0.010 Z Fin. Allowance)
+#<NumPasses> = #10 (=2)
+#<ToolNumber> = #11 (=01)
+#<ToolOffset> = #12 (=01)
+#<CSS> = #13 (=200 Rough CSS SFM)
+#<MaxRPMRough> = #14  (=1500 Max Rpm for Roughging)
+#<FeedRate> = #15 (=0.012 Rough Feed Units/Min)
+#<FinishCSS> = #16 (=400 Finish CSS Units/Min) 
+#<MaxRPMFinish> = #17 (=1500 Max RPM for finishing)
+#<FinishFeedRate> = #18 (=0.008 Finish Feed Units/Min)
+#<SpindleDir> = #19 (=04)
+#<Coolant> = #20 (=8 Coolant On=8, Off=9)
+
+
+
+(Calculations)
+;Calculate the diameter at the end of the Taper
+#<X2> = [#<X1> + [2 * [#<Z1> - #<Z2>] * TAN[#<Angle>]]]
+(debug, X2 = #<X2>)
+
+;Calculate the projected diameter directly below the retract point
+#<X3> = [#<X1> - [2 * [#<Z1> + #<Z0>] * TAN[#<Angle>]]]
+#<Z3> = #<Z0>
+(debug, X3 = #<X3>)
+(debug, Z3 = #<Z3>)
+
+;Calculate the projected diameter + finishing allowance
+#<X4> = [#<X3> + [2 * #<I>]]
+#<Z4> = #<Z0>
+(debug, X4 = #<X4>)
+(debug, Z4 = #<Z4>)
+
+;Calculate the distance to the end of the taper + finishing allowance
+#<Z5> = [#<Z2> + #<K>]
+(debug, Z5 = #<Z5>)
+
+;Calculate the X step based on the number of passes.
+#<Xstep> = [[#<StartDia> - #<X4>] / [#<NumPasses>]] 
+(debug, Xstep = #<Xstep>)
+
+#<DOC> = [#<Xstep> / 2] 
+(debug, DOC = #<DOC>)
+
+;Calculate the fanuc style tool number 
+#<fanuc_tool_number>= [[#<ToolNumber> * 100] + #<ToolOffset>]
+(debug, fanuc tool number = #<fanuc_tool_number>)
+
+
+;Calculate the starting rpm based on the staring diameter to avoid 
+;wild rpm swings when G96 is called
+#<StartRPM> = [3.82 * [#<CSS> / #<StartDia>]]
+(debug, Start Spindle at #<StartRPM> RPM)
+
+
+(Sanity Checks)
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (ABORT, EXITING -- Offset Number does not match tool number)
+o940 endif
+
+o960 if [#<Angle> LT 0]
+        (ABORT, EXITING -- Angle must be greater than 0)
+o960 endif 
+
+(If we've got here, its time to get down to business)
+(Setup Commands)
+;G18                         ;XZ Plane
+;G7                          ;Dia. Mode
+;G40                         ;Cancel Cutter Comp
+;G49                         ;Cancel Tool Length Comp
+;G61                          ;exact path
+
+(Tool Change)
+;M6 T#<fanuc_tool_number>    ;Tool Change 
+
+
+(Spindle)
+;G97 S#<StartRPM>            ;RPM mode
+M#<SpindleDir> M#<Coolant>  ;Spindle On, Coolant On
+
+(Start Position)
+G00 X#<X0> Z#<Z0>           ;Rapid to Starting Position
+G96 D#<MaxRPMRough> S#<CSS>  ;CSS On
+G95 F#<FeedRate>            ;Units/Rev
+#<Pass> = 1                 ;Start Counting
+G42 D#<ToolNumber>           ;Dynamic Cutter Comp On 
+(Roughing Pass)
+o200 repeat[#<NumPasses>]
+        
+        (debug, pass = #<Pass>)
+        ;Calculate the Cutting Dia
+        #<CutDia> = [#<StartDia> - [#<Xstep> * #<Pass>]]
+        
+
+        ;Calculate the projected point 
+        #<Xtemp> = [#<CutDia> + [2 * [#<Z4> - #<Z5>] * TAN[#<Angle>]]] 
+        
+
+    o210 if [#<Xtemp> GE #<X0>]
+            (debug, Projected point above Retract Pt, Recalculating ...)
+            #<X5> = #<X0>
+            #<Ztemp> =[#<Z0> - [[ 1 / TAN[#<Angle>]] * [#<X0> - #<CutDia>]]] 
+            (debug, Ztemp = #<Ztemp>)
+            G00 X#<CutDia> 
+            G01 X#<X5> Z#<Ztemp> F#<FeedRate>
+            G01 X#<X0>> 
+            G00 Z#<Z0>
+            
+    o210 else
+            #<X5> = #<Xtemp>
+            #<Z5> = [#<Z2> + #<K>]
+            G00 X#<CutDia> 
+            G01 X#<X5> Z#<Z5> F#<FeedRate>
+            G01 X#<X0>  
+            G00 Z#<Z0>            
+
+    o210 endif
+
+    #<Pass> = [#<Pass> + 1]    
+    
+o200 endrepeat
+
+(Finishing Pass)
+F#<FinishFeedRate>          
+G96 D#<MaxRPMFinish>  S#<FinishCSS>      
+G00 X#<X3> 
+G01 X#<X2> Z#<Z2> F#<FinishFeedRate>
+G01 X#<X0>  
+G00 Z#<Z0>
+
+(Cleanup)
+G40                             ;Cancel cutter compensation
+;G49                             ;Cancel Tool Offset
+G97 S#<StartRPM>                ;Rpm Mode
+G95 F#<FeedRate>                ;Unit/Rev
+M5 M9                           ;Spindle OFF, All Coolant OFF
+
+o<x3-od-taper> endsub

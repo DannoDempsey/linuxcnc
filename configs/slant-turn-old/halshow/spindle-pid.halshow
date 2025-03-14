@@ -1,0 +1,19 @@
+# halshow watchlist created Sun Jan 10 10:56:58 EST 2021
+
+pin+spindle.0.speed-out
+pin+sltgear.0.rpm-in
+pin+sltgear.0.rpm-out
+pin+hssc.0.rpm-in
+pin+hssc.0.rpm-out
+pin+spindle-pid.FF0
+pin+spindle-pid.command
+pin+spindle-pid.feedback
+pin+spindle-pid.output
+pin+lcec.0.D11.enc-count
+pin+lcec.0.D11.enc-frequency
+pin+lcec.0.D11.enc-pos
+pin+lcec.0.D11.enc-pos-scale
+pin+lcec.0.D11.enc-period
+pin+spindle.0.speed-in
+pin+spindle.0.revs
+pin+spindle-pid.enable

@@ -13,6 +13,7 @@ throw_exceptions = 1
 # Method to index lathe tools using Fanuc style tool change
 # T0101 calls tool 1 and applies offset 1 + Wear Offset 1 if it exists
 # T0100 calls tool 1. No offsets are applied
+# T01 call tool 1. No offsets are applied
 def index_lathe_tool(self,**words):
     # only run this if we are really moving the machine
     # skip this if running task for the screen
@@ -26,15 +27,26 @@ def index_lathe_tool(self,**words):
             yield INTERP_ERROR
         tool_raw = int(cblock.t_number)
 
-        # Interpret the raw tool number into tool and wear number
-        if tool_raw <100:
-            tool_raw=tool_raw*100
-        tool = int(tool_raw/100)
-        wear = 10000 + tool_raw % 100
+        # Interpret the raw tool number and offset number
+        if tool_raw < 100:
+            # Convert to 4 digit format 
+            tool_raw *= 100 
+        
+        # Extract the tool number
+        tool = tool_raw // 100
+        
+        # Extract the last two digit offset number
+        offset = tool_raw % 100
+
+        # Extract the wear offset number
+        if offset != 0:
+            wear = 10000 + offset
+        else:
+            wear = 0
 
         # uncomment for debugging
-        print('***tool#',cblock.t_number,'toolraw:',tool_raw,'tool split:',tool,'wear split',wear)
-
+        print(f'*** Tool#: {cblock.t_number}, Tool Raw: {tool_raw}, Tool: {tool}, Offset: {offset}, Wear: {wear}')
+        
         if tool:
             # check for tool number entry in tool file
             (status, pocket) = self.find_tool_pocket(tool)
@@ -53,6 +65,7 @@ def index_lathe_tool(self,**words):
             self.hal_tool_comp['wear']= wear
         except:
             pass
+
         # index tool immediately to tool number
         self.selected_tool = int(self.params["tool"])
         self.selected_pocket = int(self.params["pocket"])
@@ -68,7 +81,7 @@ def index_lathe_tool(self,**words):
         self.params["current_pocket"] = self.current_pocket
         self.params["selected_pocket"] = self.selected_pocket
 
-        # change tool
+        # Change tool
         try:
             self.selected_pocket =  int(self.params["selected_pocket"])
             emccanon.CHANGE_TOOL()
@@ -82,19 +95,22 @@ def index_lathe_tool(self,**words):
             self.set_errormsg("T change aborted (return code %.1f)" % (self.return_value))
             yield INTERP_ERROR
 
-        # if the tool offset/wear offset is specified, apply it
+        # Apply the offset and wear offset if specified
         try:
-            if wear>10000:
-                self.execute("g43 h%d"% tool)
-                self.execute("g43.2 h%d"% wear)
+            if offset != 0:
+                self.execute(f"G43 H{offset}")
+                if wear != 0:
+                    self.execute(f"G43.2 H{wear}") 
+
             yield INTERP_OK
-        
+
         except:
             self.set_errormsg("Tool change aborted - No wear %d entry found in tool table" %wear)
             yield INTERP_ERROR
     except:
         self.set_errormsg("Tool change aborted (return code %.1f)" % (self.return_value))
         yield INTERP_ERROR
+
 
 ########################################################################
 # Harmonic Spindle Speed Control

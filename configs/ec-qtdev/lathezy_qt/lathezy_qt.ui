@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1975</width>
+    <width>1900</width>
     <height>1165</height>
    </rect>
   </property>
@@ -91,17 +91,54 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="ActionButton" name="actionbutton_4">
+           <widget class="ActionButton" name="btn_power">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>250</width>
               <height>40</height>
              </size>
             </property>
             <property name="text">
-             <string>POWER</string>
+             <string>POWER OFF</string>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked_state_text_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="on_color" stdset="0">
+             <color>
+              <red>50</red>
+              <green>205</green>
+              <blue>50</blue>
+             </color>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="circle_diameter" stdset="0">
+             <number>15</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="true_state_string" stdset="0">
+             <string>POWER ON</string>
+            </property>
+            <property name="false_state_string" stdset="0">
+             <string>POWER OFF</string>
+            </property>
+            <property name="is_on_status" stdset="0">
              <bool>true</bool>
             </property>
             <property name="machine_on_action" stdset="0">
@@ -111,46 +148,67 @@
           </item>
           <item>
            <widget class="ActionButton" name="actionbutton_5">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
-              <width>0</width>
-              <height>40</height>
+              <width>250</width>
+              <height>0</height>
              </size>
             </property>
             <property name="text">
-             <string>ESTOP RESET</string>
+             <string>  E-STOP</string>
+            </property>
+            <property name="icon">
+             <iconset resource="lathezy_qt.qrc">
+              <normaloff>:/images/lathezy_qt-images/stop.png</normaloff>:/images/lathezy_qt-images/stop.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
             </property>
             <property name="checkable">
              <bool>true</bool>
             </property>
             <property name="checked">
-             <bool>false</bool>
+             <bool>true</bool>
+            </property>
+            <property name="indicator_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="indicator_status_option" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="shape_option" stdset="0">
+             <number>1</number>
+            </property>
+            <property name="off_color" stdset="0">
+             <color>
+              <red>0</red>
+              <green>0</green>
+              <blue>0</blue>
+             </color>
+            </property>
+            <property name="circle_diameter" stdset="0">
+             <number>15</number>
+            </property>
+            <property name="right_edge_offset" stdset="0">
+             <number>5</number>
+            </property>
+            <property name="top_edge_offset" stdset="0">
+             <number>5</number>
             </property>
             <property name="is_estopped_status" stdset="0">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="estop_action" stdset="0">
              <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="PushButton" name="pushbutton_2">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="PushButton" name="pushbutton_3">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
             </property>
            </widget>
           </item>
@@ -167,7 +225,7 @@
              <enum>Qt::Horizontal</enum>
             </property>
             <property name="sizeType">
-             <enum>QSizePolicy::Minimum</enum>
+             <enum>QSizePolicy::MinimumExpanding</enum>
             </property>
             <property name="sizeHint" stdset="0">
              <size>
@@ -1429,14 +1487,14 @@ FROM LINE</string>
                 <item>
                  <widget class="QTabWidget" name="tabWidget_main">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>1200</width>
+                    <width>800</width>
                     <height>0</height>
                    </size>
                   </property>
@@ -1444,7 +1502,7 @@ FROM LINE</string>
                    <enum>QTabWidget::South</enum>
                   </property>
                   <property name="currentIndex">
-                   <number>2</number>
+                   <number>0</number>
                   </property>
                   <widget class="QWidget" name="tab_plot">
                    <attribute name="title">
@@ -2228,7 +2286,7 @@ OFFSETS</string>
                     <item>
                      <widget class="QGroupBox" name="groupBox_26">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -2323,6 +2381,11 @@ OFFSETS</string>
                            <height>40</height>
                           </size>
                          </property>
+                         <property name="font">
+                          <font>
+                           <pointsize>14</pointsize>
+                          </font>
+                         </property>
                          <property name="text">
                           <string>INDEX TOOL</string>
                          </property>
@@ -2346,8 +2409,20 @@ OFFSETS</string>
                            <height>40</height>
                           </size>
                          </property>
+                         <property name="font">
+                          <font>
+                           <pointsize>14</pointsize>
+                          </font>
+                         </property>
                          <property name="text">
                           <string>TOUCH X</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="Line" name="line_24">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
                          </property>
                         </widget>
                        </item>
@@ -2359,8 +2434,38 @@ OFFSETS</string>
                            <height>40</height>
                           </size>
                          </property>
+                         <property name="font">
+                          <font>
+                           <pointsize>14</pointsize>
+                          </font>
+                         </property>
                          <property name="text">
                           <string>TOUCH Z</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QPushButton" name="pushButton">
+                         <property name="minimumSize">
+                          <size>
+                           <width>0</width>
+                           <height>40</height>
+                          </size>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <pointsize>14</pointsize>
+                          </font>
+                         </property>
+                         <property name="text">
+                          <string>TOUCH WORK</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="Line" name="line_7">
+                         <property name="orientation">
+                          <enum>Qt::Horizontal</enum>
                          </property>
                         </widget>
                        </item>
@@ -2372,6 +2477,36 @@ OFFSETS</string>
                          <property name="frameShadow">
                           <enum>QFrame::Raised</enum>
                          </property>
+                         <layout class="QVBoxLayout" name="verticalLayout_60">
+                          <property name="leftMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="topMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="rightMargin">
+                           <number>0</number>
+                          </property>
+                          <property name="bottomMargin">
+                           <number>0</number>
+                          </property>
+                          <item>
+                           <widget class="QLabel" name="label_62">
+                            <property name="text">
+                             <string/>
+                            </property>
+                            <property name="pixmap">
+                             <pixmap resource="lathezy_qt.qrc">:/images/lathezy_qt-images/tool-tip.png</pixmap>
+                            </property>
+                            <property name="scaledContents">
+                             <bool>true</bool>
+                            </property>
+                            <property name="alignment">
+                             <set>Qt::AlignCenter</set>
+                            </property>
+                           </widget>
+                          </item>
+                         </layout>
                         </widget>
                        </item>
                       </layout>
@@ -2410,11 +2545,11 @@ OFFSETS</string>
                        </font>
                       </property>
                       <property name="currentIndex">
-                       <number>0</number>
+                       <number>2</number>
                       </property>
                       <widget class="QWidget" name="tab">
                        <attribute name="title">
-                        <string>DEBUG</string>
+                        <string>    DEBUG    </string>
                        </attribute>
                        <layout class="QVBoxLayout" name="verticalLayout_27">
                         <item>
@@ -2494,12 +2629,15 @@ OFFSETS</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="ActionButton" name="actionbutton_17">
+                            <widget class="ActionButton" name="btn_launch_cl">
                              <property name="sizePolicy">
                               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
+                             </property>
+                             <property name="text">
+                              <string>CLASSIC LADDER</string>
                              </property>
                             </widget>
                            </item>
@@ -2510,7 +2648,7 @@ OFFSETS</string>
                       </widget>
                       <widget class="QWidget" name="tab_2">
                        <attribute name="title">
-                        <string>ETHERCAT</string>
+                        <string>  ETHERCAT   </string>
                        </attribute>
                        <layout class="QVBoxLayout" name="verticalLayout_28">
                         <item>
@@ -3623,6 +3761,12 @@ OFFSETS</string>
                                 <layout class="QVBoxLayout" name="verticalLayout_34">
                                  <item>
                                   <widget class="PushButton" name="btn_fault_reset">
+                                   <property name="minimumSize">
+                                    <size>
+                                     <width>0</width>
+                                     <height>40</height>
+                                    </size>
+                                   </property>
                                    <property name="text">
                                     <string>RESET</string>
                                    </property>
@@ -3657,13 +3801,13 @@ OFFSETS</string>
                       </widget>
                       <widget class="QWidget" name="tab_3">
                        <attribute name="title">
-                        <string>OP STATUS</string>
+                        <string>  OP STATUS  </string>
                        </attribute>
                        <layout class="QHBoxLayout" name="horizontalLayout_21">
                         <item>
                          <widget class="QFrame" name="frame_14">
                           <property name="frameShape">
-                           <enum>QFrame::StyledPanel</enum>
+                           <enum>QFrame::NoFrame</enum>
                           </property>
                           <property name="frameShadow">
                            <enum>QFrame::Raised</enum>
@@ -4068,18 +4212,30 @@ OFFSETS</string>
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
-                               <height>40</height>
+                               <height>0</height>
                               </size>
                              </property>
                              <property name="frameShape">
-                              <enum>QFrame::StyledPanel</enum>
+                              <enum>QFrame::NoFrame</enum>
                              </property>
                              <property name="frameShadow">
                               <enum>QFrame::Raised</enum>
                              </property>
                              <layout class="QVBoxLayout" name="verticalLayout_40">
+                              <property name="topMargin">
+                               <number>0</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>0</number>
+                              </property>
                               <item>
                                <widget class="PushButton" name="btn_unclamp_turret">
+                                <property name="sizePolicy">
+                                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                  <horstretch>0</horstretch>
+                                  <verstretch>0</verstretch>
+                                 </sizepolicy>
+                                </property>
                                 <property name="minimumSize">
                                  <size>
                                   <width>0</width>
@@ -4093,7 +4249,7 @@ OFFSETS</string>
                                  <bool>true</bool>
                                 </property>
                                 <property name="pin_name" stdset="0">
-                                 <string>unclamp_turret</string>
+                                 <string>unclamp-turret</string>
                                 </property>
                                 <property name="indicator_option" stdset="0">
                                  <bool>true</bool>
@@ -4400,7 +4556,7 @@ OFFSETS</string>
                    <item>
                     <widget class="StatusStacked" name="statusstacked_mode_buttons">
                      <property name="currentIndex">
-                      <number>0</number>
+                      <number>1</number>
                      </property>
                      <widget class="QWidget" name="page_man2">
                       <layout class="QVBoxLayout" name="verticalLayout_22">
@@ -4573,12 +4729,102 @@ OFFSETS</string>
                          <layout class="QVBoxLayout" name="verticalLayout_55">
                           <item>
                            <widget class="QGroupBox" name="groupBox">
+                            <property name="font">
+                             <font>
+                              <pointsize>12</pointsize>
+                             </font>
+                            </property>
                             <property name="title">
-                             <string/>
+                             <string>MDI</string>
                             </property>
                             <property name="alignment">
                              <set>Qt::AlignCenter</set>
                             </property>
+                            <layout class="QVBoxLayout" name="verticalLayout_61">
+                             <item>
+                              <widget class="QFrame" name="frame_31">
+                               <property name="frameShape">
+                                <enum>QFrame::StyledPanel</enum>
+                               </property>
+                               <property name="frameShadow">
+                                <enum>QFrame::Raised</enum>
+                               </property>
+                               <layout class="QVBoxLayout" name="verticalLayout_62">
+                                <property name="leftMargin">
+                                 <number>0</number>
+                                </property>
+                                <property name="topMargin">
+                                 <number>0</number>
+                                </property>
+                                <property name="rightMargin">
+                                 <number>0</number>
+                                </property>
+                                <property name="bottomMargin">
+                                 <number>0</number>
+                                </property>
+                                <item>
+                                 <widget class="ActionButton" name="actionbutton">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>0</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                  <property name="text">
+                                   <string>M36</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="ActionButton" name="actionbutton_2">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>0</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                  <property name="text">
+                                   <string>M37</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="ActionButton" name="actionbutton_3">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>0</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                  <property name="text">
+                                   <string>M39</string>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="ActionButton" name="actionbutton_6">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>0</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                 </widget>
+                                </item>
+                                <item>
+                                 <widget class="ActionButton" name="actionbutton_9">
+                                  <property name="minimumSize">
+                                   <size>
+                                    <width>0</width>
+                                    <height>40</height>
+                                   </size>
+                                  </property>
+                                 </widget>
+                                </item>
+                               </layout>
+                              </widget>
+                             </item>
+                            </layout>
                            </widget>
                           </item>
                          </layout>
@@ -6798,7 +7044,7 @@ OVERRIDE</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1975</width>
+     <width>1900</width>
      <height>30</height>
     </rect>
    </property>
@@ -7606,6 +7852,22 @@ OVERRIDE</string>
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>btn_launch_cl</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>on_btn_launch_cl_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1528</x>
+     <y>614</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>949</x>
+     <y>582</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_btn_edit_gcode_clicked()</slot>
@@ -7656,5 +7918,6 @@ OVERRIDE</string>
   <slot>on_btn_pgm_step_clicked()</slot>
   <slot>on_btn_optional_stop_toggled()</slot>
   <slot>on_btn_block_delete_toggled()</slot>
+  <slot>on_btn_launch_cl_clicked()</slot>
  </slots>
 </ui>

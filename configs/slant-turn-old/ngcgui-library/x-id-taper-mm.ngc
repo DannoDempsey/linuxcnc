@@ -1,0 +1,177 @@
+; Author: D.Dempsey
+(info: ID taper turn or straight turn to a square shoulder)
+
+o<x-id-taper-mm> sub
+
+#<StartDia> = #1 (=40.00 Bore Start Dia)
+#<X0> = #2 (= 35.00 X0 Retract)
+#<Z0> = #3 (= 456.00 Z0 Retract) 
+#<X1> = #4 (=45.000 X1 Start of Taper)
+#<Z1> = #5 (=450.00 Z1 Start of Taper)
+#<Z2> = #6 (=350.00 Z2 End of Taper)
+#<Angle> = #7 (=0.000 Angle in Degrees)
+#<I> = #8 (=0.1 X Fin. Allowance)
+#<K> = #9 (=0.05 Z Fin Allowance)
+#<NumPasses> = #10 (=3)
+#<ToolNumber> = #11 (=2)
+#<ToolOffset> = #12 (=2)
+#<CSS> = #13 (=50 Rough CSS Units/Min)
+#<FeedRate> = #14 (=0.8 Rough Feed Units/Rev)
+#<FinishCSS> = #15 (=100 Finish CSS Units/Min) 
+#<FinishFeedRate> = #16 (=0.4 Finish Feed Units/Rev)
+#<Gear> = #17 (=39 Gear Low=37 High=39)
+#<GearMaxRPM> = #18 (=3500) 
+#<SpindleDir> = #19 (=04)
+#<Coolant> = #20 (=8 Coolant On=8, Off=9)
+#<UTC> = #21 (=1 UTC Active  No=0 Yes=1)
+
+(Calculations)
+;Calculate the diameter at the end of the Taper
+#<X2> = [#<X1> - [#<Z1> - #<Z2>] * TAN[#<Angle>]]
+
+;Calculate the projected diameter directly above  Z0
+#<Z3> = #<Z0>
+#<X3> = [#<X1> + [#<Z3> - #<Z1>] * TAN[#<Angle>]]
+
+;Calculate the projected diameter - finishing allowance
+#<X4> = [#<X3> - #<I>]
+#<Z4> = #<Z0>
+
+;Calculate the distance to the end of the taper + finishing allowance
+#<Z5> = [#<Z2> + #<K>]
+
+;Calculate the X Step based on the number of passes.
+#<Xstep> = [[#<X4> - #<StartDia>] / [#<NumPasses>]] 
+
+;Calculate the DOC
+#<DOC> = [#<Xstep> / 2]
+(debug, DOC = #<DOC>)
+;Calculate the fanuc style tool number 
+#<fanuc_tool_number>= [[#<ToolNumber> * 100] + #<ToolOffset>]
+;(debug, fanuc tool number = #<fanuc_tool_number>)
+
+;Calculate the starting rpm based on the staring diameter to avoid 
+;wild rpm swings when G96 is called
+#<StartRPM> = [3.82 * [#<CSS> / #<StartDia>]]
+;(debug, Start Spindle at #<StartRPM> RPM)
+
+;Make sure we know the universal tool change position G53 G00 Xxxxx Zxxxx  
+;(debug, G53 X#<_XG53> Z#<_ZG53>)
+
+(Sanity Checks)
+o910 if [[#<Gear> NE 38] AND [#<Gear> NE 39]]
+        (ABORT, EXITING -- No Gear Selected  )           
+o910 endif
+
+o920 if [[#<Gear> EQ 38] AND [#<GearMaxRPM> GT 1500]]
+        (ABORT, EXITING --  Max RPM is too high for selected gear)
+o920 endif
+
+o930 if [[#<Gear> EQ 39] AND [#<GearMaxRPM> GT 3500]]
+        (ABORT, EXITING --  Max RPM is too high for selected gear)
+o930 endif
+
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (ABORT, EXITING --  Offset Number does not match Tool Number)
+o940 endif
+
+o950 if [[#<UTC> NE 0] AND [#<UTC> NE 1]]
+        (ABORT, EXITING --  Universal Tool Change Not Specified)
+o950 endif
+
+o960 if [#<Angle> LT 0]
+        (ABORT, EXITING --  Angle must be greater than or equal to 0)
+o960 endif 
+
+o970 if [#<X0> GT #<StartDia>]
+        (ABORT, EXITING -- Retract position is greater than bore dia.)
+o970 endif
+
+(Setup Commands)
+G18                        ;XZ Plane
+G7                         ;Dia. Mode
+G40                        ;Cancel Cutter Comp.
+G49                        ;Cancel Tool Length Comp.
+G97 S#<StartRPM>           ;RPM Mode
+G95 F#<FeedRate>           ;Feed Units/Rev
+
+(Tool Change)
+o100 if [#<UTC> EQ 1]
+        G53 G00 X#<_XG53> Z#<_ZG53> ;Tool Change Position         
+o100 endif
+
+M6 T#<fanuc_tool_number>    ;Tool Change 
+#<D> = #5410                ;Tool Diameter
+#<L> = #5413                ;Tool Orientation
+
+(Gear Change)
+M#<Gear>                   ;Shift Gears
+G04 P2                     ;Wait for gear shift to complete
+
+(Spindle)
+M#<SpindleDir> M#<Coolant>  ;Spindle On, Coolant On
+G04 P2                      ;Wait 
+
+(Start Position)
+G42.1 D#<D> L#<L>                               ;Dynamic Cutter Comp On
+G00 X#<X0> Z#<Z0>                               ;Retract Position
+G96 D#<GearMaxRPM> S#<CSS>  ;CSS On
+G95 F#<FeedRate>            ;Units/Rev
+G04 P1                      ;Wait
+#<Pass> = 1                 ;Start Counting
+
+(Roughing Pass)
+o200 repeat[#<NumPasses>]
+    ;(debug, pass = #<Pass>)
+    
+    ;Calculate the Cutting Dia
+    #<CutDia> = [#<StartDia> + [#<Xstep> * #<Pass>]]
+    (debug, CutDia = #<CutDia>)
+    
+    ;Calculate the projected point 
+    #<Xtemp> = [#<CutDia> - [#<Z4> - #<Z5>] * TAN[#<Angle>]] 
+    (debug, Xtemp = #<Xtemp>)
+        
+    o210 if [#<Xtemp> LE #<X0>]
+            ;(debug, Projected point below Retract Pt, Recalculating ...)
+            #<X5> = #<X0>
+            #<Ztemp> =[#<Z0> - [[ 1 / TAN[#<Angle>]] * [#<CutDia> - #<X0>]]]        
+            
+            G00 X#<CutDia>    
+            G01 X#<X5> Z#<Ztemp> 
+            G01 X#<X0> 
+            G00 X#<X0> Z#<Z0>
+             
+    o210 else 
+            #<X5> = #<Xtemp>
+            #<Z5> = [#<Z2> + #<K>]
+            G00 X#<CutDia>    
+            G01 X#<X5> Z#<Z5> 
+            G01 X#<X0> 
+            G00 X#<X0> Z#<Z0>            
+    
+    o210 endif
+    
+    #<Pass> = [#<Pass> + 1]
+    
+o200 endrepeat
+
+(Finishing Pass)
+F#<FinishFeedRate>          
+S#<FinishCSS>
+G00 X#<X3> 
+G01 X#<X2> Z#<Z2> 
+G01 X#<X0> 
+G00 Z#<Z0>
+
+(Cleanup) 
+G97 S500                ;Rpm Mode
+G04 P4
+G95 F#<FeedRate>                ;Unit/Rev
+G40 G49                            ;Cancel cutter compensation & Tool Offset
+o110 if [#<UTC> EQ 1]
+        G53 G00 X#<_XG53> Z#<_ZG53> ;Rapid to Tool Change Position         
+o110 endif
+M5 M9                               ;Spindle OFF, All Coolant OFF
+
+o<x-id-taper-mm> endsub

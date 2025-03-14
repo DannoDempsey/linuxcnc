@@ -1,0 +1,111 @@
+########################################################################
+# VFD
+########################################################################
+# turn the vfd to auto mode
+setp lcec.0.D9.dout-0 1
+
+# this doesn't seem to be needed
+#set the mode = 2
+setp lcec.0.VFD.op-mode-1 1
+
+# TODO:look at estop scenario, enable op might need to be connected to 
+#      classicladder e-stop, might not though due to braking 
+#      requirements
+
+setp lcec.0.VFD.enable-voltage 1
+setp lcec.0.VFD.quick-stop 1
+setp lcec.0.VFD.enable-op 1
+
+# toggle this bit with motion's enable pin 
+net spindle-enable motion.motion-enabled => lcec.0.VFD.switch-on 
+
+
+# set these to bits high and toggle lcec.0.VFD.enable to start/stop the 
+# the motor 
+setp lcec.0.VFD.unlock 1
+setp lcec.0.VFD.use-ref 1
+net spindle-run spindle.0.on => lcec.0.VFD.run
+
+# Multifunction outputs from VFD
+net vfd-at-speed    lcec.0.D4.din-6
+net vfd-zero-speed  lcec.0.D4.din-7
+
+########################################################################
+# Spindle/Rpm Control
+########################################################################
+
+# sltgear
+setp sltgear.0.low-gear-ratio  1.86
+setp sltgear.0.high-gear-ratio  0.93
+net shift-request sltgear.0.shift-request motion.digital-out-42
+
+# encoder res = 1024 * 4 = 4096 
+setp lcec.0.D11.enc-pos-scale 4096
+
+# PID parameters
+
+setp spindle-pid.FF0 1.0
+setp spindle-pid.Pgain 0.0
+
+# this should be equal to sltgear.0.high-gear-max
+setp spindle-pid.maxoutput 3600
+
+# set the scale to convert frequency = pulse/sec => rev/min
+setp conv-freq.0.rpm-scale 0.0146
+
+# set the scale to convert frequency = pulse/sec => rev/sec
+setp conv-freq.0.revs-scale 0.00024414
+
+
+# feed the spindle rpm => hssc => spindle-pid and sltgear 
+net hssc-in     spindle.0.speed-out => hssc.0.rpm-in
+net hssc-out    hssc.0.rpm-out => spindle-pid.command
+
+# connect feedback in rpm to the pid loop
+net freq-fb-raw     lcec.0.D11.enc-frequency => conv-freq.0.freq-in
+net rpm-fb          conv-freq.0.rpm-fb => spindle-pid.feedback
+net revs-fb         conv-freq.0.revs-fb => spindle.0.speed-in
+net spindle-rev     spindle.0.reverse => xor2.0.in0 conv-freq.0.spindle-in-rev 
+net spindle-fwd     spindle.0.forward => xor2.0.in1
+net pid-enable      xor2.0.out => spindle-pid.enable
+    
+
+# Connections to sync motion with the spindle
+net enc-pos       lcec.0.D11.enc-pos => spindle.0.revs
+
+# Connect the near component
+setp near.0.difference 5.0
+net rpm-fb      near.0.in1 
+net hssc-out    near.0.in2
+net at-speed    near.0.out => spindle.0.at-speed
+
+
+net vel-cmd     spindle-pid.output => sltgear.0.rpm-in
+net target-vel  sltgear.0.rpm-out => lcec.0.VFD.target-vel
+ 
+########################################################################
+# Spindle Load
+########################################################################
+# El3152 4-20 mA Input 
+# 4-20 mA range, 0 - 2.5 x VFD Max output (24 Amps)
+# 0-32767 steps
+# see notes from march 23 2021 for calculations
+setp lcec.0.AIN.ain-0-bias -2.985
+setp lcec.0.AIN.ain-0-scale 60
+
+# set the conv_amps HAL component parameters for the spindle motor
+setp conv-amps.2.full-load-amps 17.7
+ 
+# connect the EL3152 value to conversion function
+net spindle-amps lcec.0.AIN.ain-0-val => conv-amps.2.amps-in 
+ 
+#Encoder Index for coordinated motion
+net spindle-enc-count lcec.0.D11.enc-count 
+net index-enable spindle.0.index-enable => lcec.0.D11.enc-index-c-enable
+
+##########################################################################
+# Chuck
+##########################################################################
+
+
+

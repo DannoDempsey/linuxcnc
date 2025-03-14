@@ -1,0 +1,13 @@
+# halshow watchlist created Tue Oct 19 18:18:10 EDT 2021
+
+pin+joint.0.free-tp-enable
+pin+joint.0.free-pos-cmd
+pin+joint.0.motor-pos-cmd
+pin+joint.0.motor-pos-fb
+pin+joint.0.pos-cmd
+pin+joint.0.pos-fb
+pin+joint.0.vel-cmd
+pin+joint.0.f-error
+pin+joint.0.f-errored
+pin+gscreen.lbl_xmode_fb
+pin+lcec.0.A1.homing-attained

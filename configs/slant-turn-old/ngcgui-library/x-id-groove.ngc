@@ -1,0 +1,199 @@
+; Author: D.Dempsey
+(info: OD Groove, Tooltip at leading edge of parting tool)
+
+o<x-id-groove> sub
+
+(Parameters)
+#<X0> = #1 (=2.5000)
+#<Z0> = #2 (=0.2500)
+#<StartDia> = #3 (=1.75)
+#<FinalDia> = #4 (=1.85)
+#<GrooveStartZ> = #5 (=-1.000 Start of Groove)
+#<GrooveEndZ> = #6 (=-1.250  End of Groove)
+#<I> = #7 (=0.010)
+#<K> = #8 (=0.005)
+#<XClear> = #9 (=1.625)
+#<XInc> = #10 (=0.100)
+#<XRetract> =#11 (=0.010)
+#<ZClear> = #12 (=0.250)
+#<InsertWidth> = #13 (=0.065)
+#<StepOver> = #14 (=0.05)
+#<ToolNumber> = #15 (=06)
+#<ToolOffset> = #16 (=06)
+#<CSS> = #17 (=200 CSS Units/Min)
+#<FeedRate> = #18 (=0.0050 Feed Units/Rev)
+#<FinishCSS> =#19 (=400)
+#<FinishFeedRate> = #20 (=0.003)
+#<Gear> = #21 (=39 Gear Low=37 High=39)
+#<GearMaxRPM> = #22 (=3500) 
+#<SpindleDir> = #23 (=03)
+#<Coolant> = #24 (=8 Coolant On=8, Off=9)
+
+(Calculations)
+;Calculate the critical X coordinates of the Groove
+#<RoughDia> = [#<FinalDia> - #<I>]
+#<XNumSteps> = FUP[[#<RoughDia> - #<StartDia>] / #<XInc> ]
+(debug, Number of steps in the X direction = #<XNumSteps>)
+
+;Calculate the critical Z Coordinates of the groove
+#<Z1> = [#<GrooveStartZ> - #<InsertWidth>]
+#<Z2> = [#<GrooveStartZ> - #<K> - #<InsertWidth>]
+#<Z3> = #<GrooveEndZ>
+#<Z4> = [#<GrooveEndZ> + #<K>]
+
+(debug, ZClear = #<ZClear> , Z1 = #<Z1> , Z2 = #<Z2> , Z4 = #<Z3> , Z4 = #<Z4>)
+
+;Calculate the number of steps required to cut the groove
+#<GrooveWidth> = [[#<Z2> - #<Z4>]]
+#<NumSteps> = FUP[#<GrooveWidth> / #<StepOver>]
+#<GrooveMidPt> = [#<Z3> + [#<GrooveWidth> / 2]]
+
+(debug, Groove Width = #<GrooveWidth> , Midpoint = #<GrooveMidPt> , Number of Steps =  #<NumSteps>)
+
+;Calculate the fanuc style tool number 
+#<fanuc_tool_number>= [[#<ToolNumber> * 100] + #<ToolOffset>]
+(debug, fanuc tool number = #<fanuc_tool_number>)
+
+(Sanity Checks)
+o900 if [#<StepOver> GT #<InsertWidth>]
+        (debug, Z Step over distance too large -- EXITING)
+        M2
+o900 endif
+
+o903 if [#<StepOver> LT [ 0.5 * #<InsertWidth>]]
+        (debug, Z Step over too small, 0.5 x Insert Width = Min Step Over -- EXITING)
+        M2
+o903 endif
+
+
+o905 if [#<XClear> GT #<StartDia>]
+        (debug, Potiental Crash! X Clearance Dia > Groove Starting Dia -- EXITING)
+        M2
+o905 endif
+
+
+o910 if [[#<Gear> NE 38] AND [#<Gear> NE 39]]
+        (debug, No gear selected -- EXITING)
+        M2
+o910 endif
+
+o920 if [[#<Gear> EQ 38] AND [#<GearMaxRPM> GT 1500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        M2
+o920 endif
+
+o930 if [[#<Gear> EQ 39] AND [#<GearMaxRPM> GT 3500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        M2
+o930 endif
+
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (debug, Offset Number does not match Tool Number -- EXITING)
+        M2
+o940 endif
+
+(Setup Commands)
+G7                                              ;Dia. Mode
+G95                                             ;Feed Units/Rev
+G40 G49                                         ;Cancel Tool Length Comp 
+;M#<Gear                                        ;Gear  
+G96 D#<GearMaxRPM> S#<CSS>                      ;CSS On
+
+M61 Q#<ToolNumber>                               
+M6 T#<fanuc_tool_number>                        ;Tool Change at G53 Coordiantes 
+#<D> = #5410                                    ;Tool Diameter
+(debug, Tool Diameter = #<D>)
+#<L> = #5413                                    ;Tool Orientation
+(debug, Tool Orientation = #<L>)
+  
+
+M#<SpindleDir>                                  ;Turn on Spindle
+M#<Coolant>                                     ;Coolant ON
+G00 X#<X0> Z#<Z0>                               ;Starting Coordinates
+G00 X#<XClear> Z#<ZClear>                       ;Safe Point
+
+
+#<Step> = 1                                     ;Start Counting
+#<Inc>  = 0
+
+(Rough Groove)
+o200 repeat[[#<NumSteps> + 1]]
+    
+    ;Do the even number passes first 0 => 2 => 4 =>    
+    #<Ztemp> = [#<Z4> + [#<StepOver> * #<Inc>]]
+    
+    ;Loop Back to do the odd number passes
+    o220 if [ [#<Ztemp> GT #<Z2>]  AND [#<Step> LE #<NumSteps>]]
+            #<Ztemp> = [#<Z4> + #<StepOver>]
+            #<Inc> = 1
+    
+    ;Do the last pass        
+    o220 elseif  [#<Ztemp> GT #<Z2>]
+            #<Ztemp> = #<Z2>
+                   
+    o220 endif
+    
+    (debug, Step = #<Step> , Increment = #<Inc> , Ztemp = #<Ztemp>)
+    
+    G00 X#<XClear> Z#<Ztemp>            ;Start of Groove Position
+    
+    (Lets Get Groovy...)    
+    #<GStep> = 1    ; Start Counting 
+    
+    o240 repeat [#<XNumSteps>]
+    
+        #<Xtemp> = [#<StartDia> - [#<XInc> * #<Gstep>]]
+        
+        o250   if [#<Xtemp> GT #<RoughDia>]
+               #<Xtemp> = [#<StartDia> + [#<XInc> * #<Gstep>]]
+               #<XRtemp> = [#<Xtemp> - #<XRetract>]
+               
+               ;Prevent Crashes 
+               o260 if [#<XRtemp> LT #<XClear]
+                    #<XRtemp> = #<XClear>               
+               o260 endif
+
+        o250   else
+               #<Xtemp> = #<RoughDia>
+               #<XRtemp> = #<XClear>
+
+        o250   endif         
+
+
+        ;(debug, Groove Step #<GStep> , DOC = #<Xtemp> , Retract to #<XRtemp>)
+
+        G01 X#<Xtemp> F#<FeedRate>
+        G00 X#<XRtemp>
+        
+        #<GStep> = [#<Gstep> + 1]             
+         
+            
+    o240 endrepeat            
+
+    
+    #<Inc>  = [#<Inc> + 2]
+    #<Step> = [#<Step> + 1]    
+    
+o200 endrepeat
+
+
+(Finish Groove)
+S#<FinishCSS>                               ;Finishing CSS ON
+G00 Z#<Z1>
+G01 X#<FinalDia> F#<FinishFeedRate>
+G01 Z#<GrooveMidPt>
+G00 X#<XClear>
+G00 Z#<Z3>
+G01 X#<FinalDia>
+G01 Z#<GrooveMidPt>
+G00 X#<XClear>                              ;Return to Safe Point
+G00 Z#<ZClear>                              ;Return to Safe Point
+G00 X#<X0> Z#<Z0>                           ;Return to Starting Coordinates
+
+(Cleanup) 
+M5 M9               ;Spindle OFF, All Coolant OFF
+G40                 ;Cancel Cutter Comp
+G49                 ;Cancel Tool Length Compensation
+G53 G0 X0 Z0        ;HOME OR Tool Change Position 
+
+o<x-id-groove> endsub

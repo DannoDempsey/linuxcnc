@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<theme name="expose" author="Matthew Allum - mallum@handhelds.org"
+       desc="OSX Panther like theme, based on various metacity theme bits" 
+       version="1.0" engine_version="1" >
+
+<color id="black" def="#000000" />
+<color id="white" def="#ffffff" />
+
+<color id="textcol" def="#ffffff" />
+
+<color id="bordercol" def="#595961" />
+<color id="hlcol"     def="#f6f6f6" />
+
+<font id="titlefont" def="Sans 20px" />
+<font id="barfont"   def="Sans 6" />
+
+<pixmap id="titlebar" filename="title-bar.png" />
+<pixmap id="rightbar" filename="right-side.png" />
+<pixmap id="leftbar" filename="left-side.png" />
+
+<pixmap id="leftedge" filename="left-edge.png" />
+<pixmap id="rightedge" filename="right-edge.png" />
+
+<pixmap id="bottomleft" filename="bottom-left.png" />
+<pixmap id="bottombar" filename="bottom.png" />
+<pixmap id="bottomright" filename="bottom-right.png" />
+
+<!-- buttons -->
+
+<pixmap id="buttoninactive" filename="button-inactive.png" />
+<pixmap id="buttonclose" filename="button-close.png" />
+
+<pixmap id="menubg" filename="menubg.png" />
+
+<frame id="main" height="23">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="pixmap" pixmap="titlebar" />
+
+  <layer x="0" y="0" w="4"  h="23" 
+   type="pixmap" pixmap="leftbar" />
+
+  <layer x="-4" y="0" w="4"  h="23" 
+   type="pixmap" pixmap="rightbar" />
+
+  <button x="-22" y="3" w="20" h="20" action="close" >
+   <active pixmap="buttoninactive" />
+   <inactive pixmap="buttonclose" />
+  </button>
+
+  <button x="labelx" y="0" w="labelw" h="23" 
+          action="menu" options="inputonly" />
+
+
+  <layer x="2" y="1" w="100%-22" h="23" 
+   type="label" color="black" justify="center" font="titlefont" />
+
+</frame>
+
+<frame id="main-east"  width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="pixmap" pixmap="rightedge" />
+
+</frame>
+
+<frame id="main-west"  width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="pixmap" pixmap="leftedge" />
+
+</frame>
+
+<frame id="main-south" height="4" >
+
+  <layer x="0" y="0" w="100%"  h="4" 
+   type="pixmap" pixmap="bottombar" />
+
+  <layer x="0" y="0" w="4"  h="4" 
+   type="pixmap" pixmap="bottomleft" />
+
+  <layer x="-4" y="0" w="4"  h="4" 
+   type="pixmap" pixmap="bottomright" />
+
+</frame>
+
+<frame id="dialog" height="23" options="shaped">
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="pixmap" pixmap="titlebar" />
+
+  <layer x="0" y="0" w="4"  h="23" 
+   type="pixmap" pixmap="leftbar" />
+
+  <layer x="-4" y="0" w="4"  h="23" 
+   type="pixmap" pixmap="rightbar" />
+
+  <button x="-22" y="3" w="20" h="20" action="close" >
+   <active pixmap="buttoninactive" />
+   <inactive pixmap="buttonclose" />
+  </button>
+
+  <layer x="2" y="1" w="100%-22" h="23" 
+   type="label" color="black" justify="center" font="titlefont" />
+
+</frame>
+
+<frame id="dialog-east"  width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="pixmap" pixmap="rightedge" />
+
+</frame>
+
+<frame id="dialog-west"  width="4" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="pixmap" pixmap="leftedge" />
+
+</frame>
+
+<frame id="dialog-south" height="4" >
+
+  <layer x="0" y="0" w="100%"  h="4" 
+   type="pixmap" pixmap="bottombar" />
+
+  <layer x="0" y="0" w="4"  h="4" 
+   type="pixmap" pixmap="bottomleft" />
+
+  <layer x="-4" y="0" w="4"  h="4" 
+   type="pixmap" pixmap="bottomright" />
+
+</frame>
+
+
+
+<frame id="menu"
+        border_north="2" 
+        border_south="2" 
+        border_east="2"
+        border_west="2"  
+        highlight="hlcol" 
+        font="titlefont" color="black" >
+
+  <layer x="0" y="0" w="100%"  h="100%" 
+   type="plain" color="bordercol" />
+
+  <layer x="1" y="1" w="100%-2"  h="100%-2" 
+   type="pixmap" pixmap="menubg" />
+
+</frame>
+
+
+</theme>

@@ -1,0 +1,158 @@
+########################################################################
+# INPUTS
+# LSW-1 Neutral 
+# LSW-3 Low
+# LSW-4 High
+# LSW-5 Turret Unclamp
+# LSW-8 Tailstock FWD end
+# LSW-9 Tailstock REV end 
+# LSW-10 Tailsleeve FWD end
+# LSW-11 Tailsleeve REV end
+#
+# reed switches indicate the tool position
+# tool 1: reed-sw1, wire #127
+# tool 2: reed-sw2, wire #128
+# tool 3: reed-sw3, wire #129
+# tool 4: reed-sw4, wire #130
+# tool 5: reed-sw5, wire #131
+# tool 6: reed-sw6, wire #132
+# tool 7: reed-sw7, wire #133
+# tool 8: reed-sw8, wire #134
+# tool 9: reed-sw9, wire #139
+# tool 10: reed-sw10, wire# 140
+#
+# signal indicating turret is in odd position  wire# 119
+# signal indicating turret is in even position wire# 120
+# lsw-5   indicating turret is unclamped wire# 138
+#
+# Outputs
+# SOL_1   Turret Unclamp;       
+# SOL_2A  Turret Rotation;      
+# SOL_2B  Turret Slow Rotation; 
+# SOL-20A Hydraulic Shift Low; 
+# SOL-20B Hydraulic Shift High; 
+# SOL-22A Tailstock Forward;
+# SOL-22B Tailstock Reverse;
+# SOL-23  Tailstock Unclamp;
+# SOL-24A Tailsleeve Forward; 
+# SOL-24B Tailsleeve Reverse;  
+# SOL-INCH Gear Change
+#
+# Connect signals from ethercat bus and map to digital i/o
+#
+# NOTE: digital inputs/outputs must be mapped in hal before they can be 
+# used in a pyton remap
+
+
+
+########################################################################
+# Signals for monitorting of the connection state
+# and slave state
+########################################################################
+net ec-slaves-responding <= lcec.slaves-responding
+net ec-link-up <= lcec.link-up
+net ec-all-op <= lcec.all-op
+
+########################################################################
+# E-Stop
+# Wire ESTOP-OUT2, From Estop Relay
+########################################################################
+net ext-estop lcec.0.D1.din-4
+
+########################################################################
+# LUBE/HYDRAULIC
+#
+########################################################################
+# Spindle Lube
+net spindle-lube-psw lcec.0.D1.din-0-not
+
+# Slideway Lube
+net slideway-lube-psw lcec.0.D1.din-1-not
+
+# Hydraulic Pressure
+
+# Cabinet Fan TBD...You can hear it if it's on
+
+########################################################################
+# M6/M7 Chuck/Unchuck
+########################################################################
+net fsw-in lcec.0.D1.din-3
+net fsw-out lcec.0.D7.dout-1
+
+########################################################################
+# GEAR SHIFT
+########################################################################
+# Inputs
+net lsw-1-in lcec.0.D2.din-3-not    motion.digital-in-00    sltgear.0.lsw-neutral
+net lsw-3-in lcec.0.D2.din-2        motion.digital-in-01    sltgear.0.lsw-low
+net lsw-4-in lcec.0.D2.din-4        motion.digital-in-02    sltgear.0.lsw-high
+
+# Outputs
+
+net sol-inch lcec.0.D8.dout-6 
+ 
+net sol-20A     lcec.0.D7.dout-4 <=  motion.digital-out-17
+net sol-20B     lcec.0.D7.dout-5 <=  motion.digital-out-18
+net sol-inch-on                      motion.digital-out-30
+
+
+#######################################################################
+# TURRET
+########################################################################
+
+# Inputs
+net reed-sw1-in  lcec.0.D3.din-2
+net reed-sw2-in  lcec.0.D3.din-3
+net reed-sw3-in  lcec.0.D3.din-4
+net reed-sw4-in  lcec.0.D3.din-5
+net reed-sw5-in  lcec.0.D3.din-6
+net reed-sw6-in  lcec.0.D3.din-7
+net reed-sw7-in  lcec.0.D4.din-0
+net reed-sw8-in  lcec.0.D4.din-1
+net reed-sw9-in  lcec.0.D4.din-2
+net reed-sw10-in lcec.0.D4.din-3
+
+net turret-unclamp-lsw  lcec.0.D2.din-5
+net turret-odd-pos      lcec.0.D2.din-6
+net turret-even-pos     lcec.0.D2.din-7
+
+# Outputs
+net sol-1  lcec.0.D7.dout-6
+net sol-2B lcec.0.D7.dout-7
+net sol-2A lcec.0.D8.dout-0
+
+
+########################################################################
+# Tailstock/Tailsleeve
+########################################################################
+# Inputs
+net lsw-8-in  lcec.0.D1.din-6   motion.digital-in-04
+net lsw-9-in  lcec.0.D1.din-7   motion.digital-in-05
+net lsw-10-in lcec.0.D2.din-0   motion.digital-in-06    
+net lsw-11-in lcec.0.D2.din-1-not   motion.digital-in-07
+
+# Outputs
+net sol-23  lcec.0.D8.dout-1
+net sol-22A lcec.0.D8.dout-2
+net sol-22B lcec.0.D8.dout-3
+net sol-24A lcec.0.D8.dout-4
+net sol-24B lcec.0.D8.dout-5
+
+ 
+########################################################################
+# Motion Pins
+########################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+

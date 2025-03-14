@@ -29,8 +29,8 @@ loadrt near names=near_speed
 # classic ladder
 loadrt classicladder_rt numBits=10 numCounters=10 numTimersIec=20 numPhysInputs=200 numPhysOutputs=200
 addf classicladder.0.refresh servo-thread
-# Load the mazak classic ladder file 
-# loadusr classicladder /home/daniel/dev/linuxcnc-dev/configs/ec-qtdev/SlantTurn-1500.clp
+# Load the mazak classicladder simulation file 
+loadusr classicladder /home/daniel/dev/linuxcnc-dev/configs/ec-qtdev/SlantTurn-1500.clp
 
 # pin aliases
 # param aliases
@@ -50,7 +50,7 @@ net J1:on-pos J1_pid.output => J1_mux.in1
 net J1:pos-cmd joint.1.motor-pos-cmd => J1_pid.command
 net J1:pos-fb J1_mux.out => J1_mux.in0 J1_switch.cur-pos J1_vel.in joint.1.motor-pos-fb
 net J1:vel J1_vel.out => J1_accel.in
-net estop:loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
+#net estop:loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
 net sample:enable motion.motion-enabled => J0_mux.sel J1_mux.sel
 net spindle-at-speed near_speed.out => spindle.0.at-speed
 net spindle-index-enable sim_spindle.index-enable <=> spindle.0.index-enable

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<EtherCATMailbox><SoE><InitCmds>
+    <!-- -->
+	<InitCmd Fixed="1">
+		<Transition>PS</Transition>
+		<Comment><![CDATA[Mode of operation]]></Comment>
+        <Timeout>0</Timeout>
+		<IDN>0x6060</IDN>
+		<Elements>8</Elements>
+		<Attribute>0</Attribute>
+		<Data>02</Data>
+	</InitCmd>
+
+
+
+
+
+
+
+
+
+
+</InitCmds></SoE></EtherCATMailbox>

@@ -1,0 +1,16 @@
+# halshow watchlist created Mon Jan 04 15:54:37 EST 2021
+
+pin+joint.1.homing
+pin+joint.1.home-state
+pin+joint.1.home-sw-in
+pin+joint.1.homed
+pin+lcec.0.A2.srv-mode-fb
+pin+lcec.0.A2.srv-pos-cmd
+pin+lcec.0.A2.srv-pos-fb
+pin+joint.1.motor-offset
+pin+joint.1.motor-pos-cmd
+pin+joint.1.motor-pos-fb
+pin+joint.1.pos-cmd
+pin+joint.1.pos-fb
+pin+joint.1.f-error
+pin+joint.1.f-errored

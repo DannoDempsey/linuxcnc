@@ -1,0 +1,17 @@
+(This file is called if an error occurs during the homing routine)
+(sets parameter 31 = 400 )
+
+o<homing_error> sub
+
+(debug,executing homing_error.ngc file)
+
+(expose the remap level)
+(debug, homing_error.ngc; call_level= #<_call_level> remap_level=#<_remap_level>)
+
+(set parameter 31 = 400)
+#31 = 400
+
+o<#31> call
+
+o<homing_error> endsub
+M2

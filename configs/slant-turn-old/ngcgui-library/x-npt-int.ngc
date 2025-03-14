@@ -1,0 +1,351 @@
+;Author: D.Dempsey
+(info: Internal NPT threads 0.250" to 4" Npt)
+
+o<x-npt-int> sub
+
+
+(Program assumes that Z=0 located at end of pipe to be threaded)
+#<StartDia>		= #1 (= 2 Nom or Act Dia, D)
+#<TPI>	= #2 (= 0 TPI, 0 for auto)
+#<MaxDOC>	= #3 (= 0.016 First Cut)
+#<MinDOC> = #4 (= 0.0005)
+#<XRetract> = #5 (= 0.075 X Retract Amount)
+#<LeadIn> = #6 (= 0.250 Z Leadin, must must be multiple of pitch)
+#<TipRadius> = #7 (= 0.004 Tip Radius)
+#<NumPasses> = #8 (= 10)
+#<NumSpringPasses> = #9 (= 2 Spring Passes)
+#<InfeedAngle> = #10(= 29.5 Angle, 0, 29, 29.5, 30)
+#<ToolNumber> = #11  (= 6)
+#<ToolOffset> = #12  (= 6)
+#<SpindleDir> = #13  (= 3)
+#<Gear> = #14        (= 37)
+#<GearMaxRPM> = #15  (= 1500)
+#<Rpm> = #16 (= 500)
+#<DefaultFeed> = #17 (= 0.02)
+#<Coolant> = #18 (= 8) 
+#<UTC> = #19 (= 1 Yes =1 , No = 0)
+#<I> = #20 (=0.003  Dia. Finish Allowance)
+
+   
+(debug, Tool Number = #<ToolNumber> , Tool Offset = #<ToolOffset> RPM = #<RPM> Spindle Dir. = #<SpindleDir>)
+
+(Lookup Table for Auto TPI detection)
+    o300 if [#<StartDia> EQ 0.125]
+        #<StartDia> = 0.405
+        #<TPI> = 27
+        #<L1> = 0.1615
+    o300 endif 
+    
+    o305 if [#<StartDia> EQ 0.250]
+        #<StartDia> = 0.540
+        #<TPI> = 18
+        #<L1> = 0.2278 
+    o305 endif
+    
+    o310 if [#<StartDia> EQ 0.375]
+        #<StartDia> = 0.675
+        #<TPI> = 18
+        #<L1> = 0.240
+    o310 endif 
+    
+    o315 if [#<StartDia> EQ 0.500]
+        #<StartDia> = 0.840
+        #<TPI> = 14
+        #<L1> = 0.320
+    o315 endif
+   
+    o320 if [#<StartDia> EQ 0.750]
+        #<StartDia> = 1.050
+        #<TPI> = 14
+        #<L1> = 0.339
+    o320 endif 
+    
+    o325 if [#<StartDia> EQ 1.000]
+        #<StartDia> = 1.315
+        #<TPI> = 11.5
+        #<L1> = 0.400
+    o325 endif 
+    
+    o330 if [#<StartDia> EQ 1.250]
+        #<StartDia> = 1.660
+        #<TPI> = 11.5
+        #<L1> = 0.420
+    o330 endif 
+    
+    o335 if [#<StartDia> EQ 1.500]
+        #<StartDia> = 1.900
+        #<TPI> = 11.5
+        #<L1> = 0.420
+    o335 endif 
+    
+    o340 if [#<StartDia> EQ 2.000]
+        #<StartDia> = 1.375
+        #<TPI> = 11.5
+        #<L1> = 0.436
+    o340 endif
+    
+    o345 if [#<StartDia> EQ 3.000]
+        #<StartDia> = 3.5
+        #<TPI> = 8.0
+        #<L1> = 0.766
+    o345 endif   
+   
+    o350 if [#<StartDia> EQ 4.000]
+        #<StartDia> = 4.5
+        #<TPI> = 8.0
+        #<L1> = 0.844
+    o350 endif   
+    
+    o355 if [#<TPI> EQ 0]
+        (ABORT, need to input TPI)
+    o355 endif 
+
+(Sanity Checks)
+o910 if [[#<Gear> NE 37] AND [#<Gear> NE 39]]
+        (ABORT, EXITING -- No Gear Selected)
+o910 endif
+
+o920 if [[#<Gear> EQ 37] AND [#<GearMaxRPM> GT 1500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        (ABORT, EXITING -- Max RPM is too high for selected gear)
+o920 endif
+
+o930 if [[#<Gear> EQ 39] AND [#<GearMaxRPM> GT 3500]]
+        (ABORT, EXITING -- Max Rpm is too high for selected gear)
+o930 endif
+
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (ABORT, EXITING -- Offset Number does not match tool number)
+o940 endif
+
+o950 if [[#<UTC> NE 0] AND [#<UTC> NE 1]]
+        (ABORT, EXITING -- UniversalTool Change Not Specified)
+o950 endif
+
+
+
+
+
+(NPT Thread Calculations)
+;Pitch: tapered driveline
+#<Pitch> = [1.000488 / #<TPI>] 
+
+;E0 = Pitch Dia at begining of External Thread
+#<E0> = [#<StartDia> - [0.05 * #<StartDia> + 1.1] * #<Pitch>]
+
+;E1 = Pitch Dia at the large end of internal thread and at the gauge notch
+#<E1> = [#<E0> + [0.0625 * #<L1>]]
+
+;L3 Engagement between External and Internal Taperred Threads
+;For pipe < 2" 3 x pitch , pipe > 2 " 2 x pitch
+o100 if [#<StartDia> LE 2.0000]
+        #<L3> = [3 * #<Pitch>]
+o100 else
+        #<L3> = [2 * #<Pitch>]
+o100 endif   
+
+;L2 = Effective Thread Length
+#<L2> = [[0.80 * #<StartDia> + 6.8] * #<Pitch>] (Effective thread length)
+
+;V = Vanishing Thread Length
+#<V> = [#<Pitch> * 3.47] (Vanish thread length)
+
+;Thread Depth
+#<ThreadDepth> = [#<Pitch> * 0.866 - 2 * #<TipRadius>] 
+
+;L4 = Total Thread Length External 
+#<L4> = [#<L2> + #<V>]
+
+#<TaperAngle> = ATAN[1]/[16]
+
+;Internal Thread Length = L1 + L3
+#<L13> = [#<L1> + #<L3>]
+
+;E3 Pitch Diameter at Small End of Internal Thread
+#<E3> = [#<E1> - [#<L13> * TAN[#<TaperAngle>]]]  
+
+;Check that the value entered for leadin is a multiple of the thread pitch 
+o140 if  [#<LeadIn> MOD#<Pitch> NE 0]
+        #<LeadIn> = [2 * #<Pitch>] 
+        (debug, Lead in value is not a multiple of the pitch)
+o140 endif
+
+;Calculate the coordinates of the pitch dia at the lead in 
+;and lead out coordinates. Assumes Z = 0 at large OD.
+#<Z1Driveline> = #<LeadIn>
+#<X1DriveLine> = [#<E1> + [#<LeadIn> * TAN[#<TaperAngle>]]]
+#<Z2DriveLine> = [ -1 * [#<L13> + #<Pitch>]]
+#<X2Driveline> = [#<E3> - [#<Pitch> * TAN[#<TaperAngle>]]]
+#<CutLength> = [#<Z1Driveline> - #<Z2DriveLine>]
+
+;Calculate the constant K for incremental infeed
+#<K> = [#<ThreadDepth> / [SQRT[[#<NumPasses> - 1]]]]
+   
+(debug, Pitch = #<Pitch>)
+(debug, Thread Depth = #<ThreadDepth>)
+(debug, Pitch Dia at begining of external thread = #<E0>)
+(debug, Taper Angle = #<TaperAngle>)
+(debug, Lead In = #<LeadIn>)
+(debug, incremental infeed constant K = #<K>)
+(debug, L13 = #<L13> , E1 = #<E1> , E3 = #<E3> )
+(debug, DriveLine or Pitch Dia Dimensions X1 = #<X1DriveLine>)
+(debug, DriveLine or Pitch Dia Dimensions Z1 = #<Z1DriveLine>)
+(debug, DriveLine or Pitch Dia Dimensions X2 = #<X2DriveLine>)
+(debug, DriveLine or Pitch Dia Dimensions Z2 = #<Z2DriveLine>)  
+(debug, Cut Lentgh =  #<CutLength>) 
+
+;Calculate the taper starting dimensions
+#<X3> = [#<X1DriveLine> - #<ThreadDepth>]
+#<Z3> = #<Z1Driveline>
+#<X4> = [#<X2Driveline> - #<ThreadDepth>]
+#<Z4> = #<Z2Driveline>
+#<XRetract> = [#<X4> - #<XRetract>]
+#<ZRetract> = #<LeadIn>
+
+(debug, X3 =#<X3> Z3 = #<Z3> , X4 =#<X4> Z4 = #<Z4>)
+(debug, X Retract = #<XRetract> ,  Z Retract = #<ZRetract>)
+
+(Calculate the fanuc style tool number) 
+#<fanuc_tool_number>= [FIX[#<ToolNumber> * 100] + #<ToolOffset>]
+(debug, fanuc tool number = #<fanuc_tool_number>)
+
+
+(Setup Commands)
+G7 G18 G20              
+G40
+G49
+    
+(Tool Change)
+o150 if [#<UTC> EQ 1]
+        G53 G00 X#<_XG53> Z#<_ZG53> ;Tool Change Position         
+o150 endif
+
+M61 Q#<ToolNumber>              ;Convience for sim
+M6 T#<fanuc_tool_number>        ;Use Fanuc Tool Number to apply offsets
+#<D> = #5410
+#<L> = #5413
+
+
+(Gear)
+    
+(Spindle)
+G95 F#<DefaultFeed>      ;Inch/Rev Mode
+G97 S#<Rpm>              ;Rpm Mode
+M#<SpindleDir> 
+M#<Coolant>
+
+(Initialize loop parameters)  
+#<XInc> = 0
+#<ZInc> = 0         ;No Stepover on first pass
+#<PrevAPX> = 0
+#<PrevZInc> = 0
+#<TotalDepth> = 0
+#<Pass> = 1         ;Start Counting
+#<SpringPass> = 0
+
+;Not Sure if you want cutter comp on or not but
+;G42.1 D#<D> L#<L>           ;Dynamic Cutter Comp On  
+
+G00 X#<XRetract>  Z#<ZRetract>  ;Retract Point
+
+
+    o200 repeat [#<NumPasses>]
+        (debug, Pass = #<Pass>)
+        ;(debug, Previous APX = #<PrevAPX>)
+
+        o210 if [#<Pass> EQ 1]
+                #<APX> = #<MaxDOC>
+                #<Xtemp> = #<MaxDOC>
+                #<ZInc> = 0           
+                #<TotalDepth> = [#<TotalDepth> + #<Xtemp>]
+                
+        o210 elseif [[#<Pass> GT 1] AND [#<Pass> LT #<NumPasses>]]
+                #<Y> = SQRT[[#<Pass> - 1]]
+                #<APX> = [#<K> * #<Y>]
+                #<Xtemp> = [#<APX> - #<PrevAPX>]              
+                #<TotalDepth> = [#<TotalDepth> + #<Xtemp>]
+                #<ZInc> = [TAN[#<InfeedAngle>] * [#<TotalDepth> - #<MaxDOC>]]
+        
+        o210 else
+        
+                o215 if [[#<InfeedAngle> NE 30.0] AND [#<InfeedAngle> NE 0]]
+                    (debug, Plunge Straight In)
+                    #<Y> = SQRT[[#<Pass> - 1]]
+                    #<APX> = [#<K> * #<Y>]
+                    #<Xtemp> = [#<APX> - #<PrevAPX>]              
+                    #<TotalDepth> = [#<TotalDepth> + #<Xtemp> - #<I>]
+                    #<ZInc> = #<PrevZInc>                    
+                    
+                o215 else
+                    #<Y> = SQRT[[#<Pass> - 1]]
+                    #<APX> = [#<K> * #<Y>]
+                    #<Xtemp> = [#<APX> - #<PrevAPX>]              
+                    #<TotalDepth> = [#<TotalDepth> + #<Xtemp> - #<I>]
+                    #<ZInc> = [TAN[#<InfeedAngle>] * [#<TotalDepth> - #<MaxDOC>]]                
+                
+                o215 endif 
+                
+        o210 endif
+        
+        (debug, Xtemp = #<Xtemp> , Total Depth = #<TotalDepth> , ZInc = #<ZInc>)
+        
+        (Recalculate the Taper Dimensions for each pass)        
+        #<X5> = [#<X3> + [2 * #<TotalDepth>]]    
+        #<Z5> = [#<Z3> - #<ZInc>]
+        
+        #<X6> = [#<X5> -  [[#<CutLength> - #<ZInc>] * TAN[#<TaperAngle>]]]
+        #<Z6> = #<Z2DriveLine>
+        (debug, CutDia  X5 = #<X5> , Z5 = #<Z5> , X6 = #<X6> Z6 = #<Z6>)
+        
+        (Threading)
+        G01 X#<X5> Z#<Z5>
+        G33 X#<X6> Z#<Z6> K#<Pitch>
+        G00 X#<XRetract>
+        G00 Z#<ZRetract>        
+        
+        #<PrevAPX> = #<APX>
+        #<PrevZInc> = #<ZInc>
+        #<Pass> = [#<Pass> + 1]
+
+    o200 endrepeat
+
+
+(Initiate Spring Pass Loop)
+#<SpringPass> = 1
+#<TotalDepth> = [#<TotalDepth> + #<I>]
+(debug, Total Depth = #<TotalDepth>)
+            
+#<X5> = [#<X3> + [2 * #<TotalDepth>]] 
+#<Z5> = [#<Z3> - #<ZInc>]
+#<X6> = [#<X5> -  [[#<CutLength> - #<ZInc>] * TAN[#<TaperAngle>]]]
+#<Z6> = #<Z2DriveLine>
+
+
+(Spring Passes)
+    o240 if [#<NumSpringPasses> NE 0]
+        o250 repeat [#<NumSpringPasses>]
+            (debug, executing spring pass = #<SpringPass>)
+            (debug, CutDia  X5 = #<X5> , Z5 = #<Z5> , X6 = #<X6> Z6 = #<Z6>)
+            G01 X#<X5> Z#<Z5>
+            G33 X#<X6> Z#<Z6> K#<Pitch>
+            G00 X#<XRetract>
+            G00 Z#<ZRetract> 
+            
+            #<SpringPass> = [#<SpringPass> + 1]  
+        
+        o250 endrepeat
+
+    o240 endif 
+
+
+(Cleanup)
+G40 
+o160 if [#<UTC> EQ 1]
+        G53 G00 X#<_XG53> Z#<_ZG53> ;Rapid to Tool Change Position       
+o160 endif
+
+G49   
+M5
+M9
+
+o<x-npt-int> endsub

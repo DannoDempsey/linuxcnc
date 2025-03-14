@@ -1,0 +1,157 @@
+;Author: D.Dempsey
+(info: Face Grooving Cycle, ToolTip at OD of Groove) 
+o<x-face-groove> sub
+
+(Parameters)
+#<X0> = #1 (=2.500)
+#<Z0> = #2 (=1.000)
+#<GrooveOD> = #3 (=2.000)
+#<GrooveID> = #4 (=1.000)
+#<GrooveStart> = #5 (=-0.000)
+#<GrooveEnd> = #6 (=-0.500)
+#<I> = #7 (=0.0200)
+#<K> = #8 (=0.0100)
+#<ZClear> = #9 (=0.250)
+#<ZInc> = #10 (=0.125)
+#<ZRetract> =#11 (=0.050)
+#<InsertWidth> = #12 (=0.1000)
+#<StepOver> = #13 (=0.08)
+#<ToolNumber> = #14 (=07)
+#<ToolOffset> = #15 (=07)
+#<CSS> = #16 (=200 CSS Units/Min)
+#<FeedRate> = #17 (=0.0050 Feed Units/Rev)
+#<FinishCSS> =#18 (=400)
+#<FinishFeedRate> = #19 (=0.003)
+#<Gear> = #20 (=39 Gear Low=37 High=39)
+#<GearMaxRPM> = #21 (=3500) 
+#<SpindleDir> = #22 (=03)
+#<Coolant> = #23 (=8 Coolant On=8, Off=9)
+
+(Calculations)
+#<Itemp> = [#<I> / 2]
+#<X1> = #<GrooveOD>
+#<X2> = [#<GrooveOD> - #<Itemp>]
+#<X3> = [#<GrooveID> + #<InsertWidth>]
+#<X4> = [#<GrooveID> + #<InsertWidth> + #<Itemp>]
+#<GrooveWidth> = [#<X1> - #<X3>]
+#<NumSteps> = [FUP[[#<X2> - #<X4>] / #<StepOver>]]
+#<GrooveMidPt> = [#<X1> - [#<GrooveWidth> / 2]]
+#<ZRough> = [#<GrooveEnd> + #<K>]
+#<ZNumSteps> = FUP[[#<GrooveStart> - #<GrooveEnd>] / #<ZInc>]
+
+(debug, I/2 = #<Itemp> X1 = #<X1> , X2 = #<X2> , X3 = #<X3> , X4 = #<X4>)
+(debug, Groove Width = #<GrooveWidth> , Number of Steps = #<NumSteps> , Groove Mid Point = #<GrooveMidPt>)
+(debug, Z Rough = #<ZRough> , Z Number of Steps = #<ZNumSteps>)
+
+#<fanuc_tool_number>= [[#<ToolNumber> * 100] + #<ToolOffset>]
+(debug, fanuc tool number = #<fanuc_tool_number>)
+
+(Sanity Checks)
+
+o900 if [#<StepOver> GT [ 0.8 * #<InsertWidth>]]
+        (debug, Z Step over too large,  0.8 x Insert Width = Max Step Over -- EXITING)
+        M2
+o900 endif
+
+o905 if [#<StepOver> LT [ 0.5 * #<InsertWidth>]]
+        (debug, Z Step over too small, 0.5 x Insert Width = Min Step Over -- EXITING)
+        M2
+o905 endif
+
+o910 if [[#<Gear> NE 38] AND [#<Gear> NE 39]]
+        (debug, No gear selected -- EXITING)
+        M2
+o910 endif
+
+o920 if [[#<Gear> EQ 38] AND [#<GearMaxRPM> GT 1500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        M2
+o920 endif
+
+o930 if [[#<Gear> EQ 39] AND [#<GearMaxRPM> GT 3500]]
+        (debug, Max RPM is too high for selected gear -- EXITING)
+        M2
+o930 endif
+
+o940 if [#<ToolNumber> NE #<ToolOffset>]
+        (debug, Offset Number does not match Tool Number -- EXITING)
+        M2
+o940 endif
+
+
+
+(Setup Commands)
+G7                                              ;Dia. Mode
+G95                                             ;Feed Units/Rev
+G40 G49                                         ;Cancel Tool Length Comp 
+;M#<Gear                                        ;Gear  
+G96 D#<GearMaxRPM> S#<CSS>                      ;CSS On
+
+M61 Q#<ToolNumber>                               
+M6 T#<fanuc_tool_number>                        ;Tool Change at G53 Coordiantes 
+#<D> = #5410                                    ;Tool Diameter
+(debug, Tool Diameter = #<D>)
+#<L> = #5413                                    ;Tool Orientation
+(debug, Tool Orientation = #<L>)
+M#<SpindleDir>                                  ;Turn on Spindle
+M#<Coolant>                                     ;Coolant ON
+G00 X#<X0> Z#<Z0>                               ;Starting Coordinates
+G00 Z#<ZClear>
+(Start Face Grooving Routine)
+#<Step> = 1                                 
+#<Inc> = 0 
+
+o200 repeat[[#<NumSteps> + 1]] 
+    #<Xtemp> = [#<X2> - [#<StepOver> * #<Inc>]]
+    
+    o220 if [#<Xtemp> LT #<X4>] 
+            #<Xtemp> = #<X4>
+    o220 endif
+    
+    (debug, Step = #<Step> Xtemp = #<Xtemp>)  
+    
+    G00 X#<Xtemp>
+    
+    (Grooving Cycle)
+    #<FGStep> = 1       ;start counting
+    
+    o240 repeat [#<ZNumSteps>]
+        
+        #<Ztemp> = [#<GrooveStart> - [#<ZInc> * #<FGStep>]]
+        o250 if [#<Ztemp> GT #<ZRough>]
+                #<Ztemp> = [#<GrooveStart> - [#<ZInc> * #<FGStep>]]
+                #<ZRtemp> = [#<Ztemp> + #<ZRetract>]
+        o250 else
+                #<Ztemp> = #<ZRough>
+                #<ZRtemp> = #<ZClear>            
+        o250 endif 
+        
+        (debug, Face Groove Step = #<FGStep> , Ztemp = #<Ztemp> , ZRtemp = #<ZRtemp> )
+        
+        #<FGStep> = [#<FGStep> + 1] 
+        
+        G01 Z#<Ztemp> F#<FeedRate>
+        G00 Z#<ZRetract> 
+        
+        
+    o240 endrepeat
+    
+    #<Step> = [#<Step> + 1]
+    #<Inc> = [#<Inc> + 1]
+    
+
+o200 endrepeat
+
+(Finishing Pass)
+S#<FinishCSS>
+G00 X#<X1>
+G01 Z#<GrooveEnd> F#<FinishFeedRate>
+G01 X#<GrooveMidPt>
+G00 Z#<ZClear>
+G00 X#<X3>
+G01 Z#<GrooveEnd> F#<FinishFeedRate>
+G01 X#<GrooveMidPt>
+G00 Z#<ZClear>
+G00 X#<X0> Z#<Z0>                               ;Return to Starting Point
+
+o<x-face-groove> endsub
